@@ -159,7 +159,7 @@ def process(subFolder, outputDirectory, filename):
 	imp.updateAndDraw()
 	
 	IJ.run("Threshold...")
-	IJ.setThreshold(lowerBounds[0], 255)
+	IJ.setThreshold(0, lowerBounds[0])
 	if displayImages:
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 	IJ.run(imp, "Convert to Mask", "")
@@ -204,7 +204,7 @@ def process(subFolder, outputDirectory, filename):
 		ic.convertToGray8();
 		imp.updateAndDraw()
 		IJ.run("Threshold...")
-		IJ.setThreshold(0, lowerBounds[x])
+		IJ.setThreshold(0, lowerBounds[0])
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 		IJ.run(imp, "Convert to Mask", "")
@@ -405,7 +405,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	# A few default options
 	
 	areaFractionThreshold = [0.2, 0.2, 0.2, 0.2, 0.2]		#you can change these
-	tooSmallThreshold = 20
+	tooSmallThreshold = 24
 	tooBigThreshold = 500
 	blur = 2
 	maxima = 20
@@ -451,7 +451,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 		
 		open(outputDirectory + "/" + outputName +".csv", 'w').close
-		lowerBounds = [230, 200, 205, 205, 205]
+		lowerBounds = [187, 200, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
 			if v in thresholds:
