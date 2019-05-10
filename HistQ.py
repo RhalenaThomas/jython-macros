@@ -42,9 +42,9 @@ def getChannels(subFolder):
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
-  	gd.addStringField("Channel 0:", "Hemo")
-  	gd.addStringField("Channel 1:", "DAB")
-  	gd.addStringField("Channel 2:", "")
+  	gd.addStringField("Channel 2:", "DAB")
+  	gd.addStringField("Channel 1:", "HEMO")
+  	gd.addStringField("Channel 3:", "")
   	gd.addMessage("")
 	gd.addStringField("What would you like the output file to be named:", "output")
   	
@@ -127,8 +127,8 @@ def process(subFolder, outputDirectory, filename):
 
 	IJ.run(dup, "Colour Deconvolution", "vectors=[H DAB]")
 
-	images[0] = getImage(dup_title+ "-(Colour_1)")
-	images[1] = getImage(dup_title+ "-(Colour_2)")
+	images[0] = getImage(dup_title+ "-(Colour_2)")
+	images[1] = getImage(dup_title+ "-(Colour_1)")
 	images[2] = getImage(dup_title+ "-(Colour_3)")
 
 	images[2].close()
@@ -160,6 +160,7 @@ def process(subFolder, outputDirectory, filename):
 	
 	IJ.run("Threshold...")
 	IJ.setThreshold(0, lowerBounds[0])
+	WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 	if displayImages:
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 	IJ.run(imp, "Convert to Mask", "")
@@ -451,7 +452,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 		
 		open(outputDirectory + "/" + outputName +".csv", 'w').close
-		lowerBounds = [187, 200, 205, 205, 205]
+		lowerBounds = [200, 200, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
 			if v in thresholds:
