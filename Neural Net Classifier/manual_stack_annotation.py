@@ -3,8 +3,8 @@ import os, sys
 from ij import IJ, ImagePlus, ImageStack
 from ij.io import DirectoryChooser
 from ij.measure import Measurements
-from ij.gui import GenericDialog
-
+from ij.gui import NonBlockingGenericDialog
+from ij.gui import WaitForUserDialog
 
 # Get input and output directories
 
@@ -15,7 +15,7 @@ dc = DirectoryChooser("Choose an output directory")
 outputDirectory = dc.getDirectory()
 
 
-gd = GenericDialog("Channel Options")  
+gd = NonBlockingGenericDialog("Channel Options")  
 gd.addStringField("Enter your name: ", "")
 gd.showDialog()
 name = gd.getNextString()
@@ -36,11 +36,11 @@ with open(outputDirectory + "annotations_" + name + ".csv", "w") as log:
 
 #	for subfolder in subfolders:
 	for filename in os.listdir(inputDirectory): 
-		if filename.endswith(".tif"):
+		if filename.endswith(".TIF"):
 			imp = IJ.openImage(inputDirectory + filename)
 			imp.show()
 			
-			gd = GenericDialog("Channel Options")  
+			gd = NonBlockingGenericDialog("Channel Options")  
 			gd.addStringField("Enter the frame at which the cells start differentiating: ", "")
 			gd.addStringField("Enter the frame at which all cells are differentiated: ", "")
 			gd.showDialog()
