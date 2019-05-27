@@ -181,9 +181,10 @@ def process(subFolder, outputDirectory, filename):
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
-		
-		stats = imp.getStatistics(Measurements.AREA)
-		totalAreas.append(stats.area)
+	
+	
+		stats = imp.getStatistics(Measurements.AREA_FRACTION)
+		totalAreas.append(stats.areaFraction)
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
