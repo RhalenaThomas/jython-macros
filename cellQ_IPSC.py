@@ -131,6 +131,8 @@ def process(subFolder, outputDirectory, filename):
 	stats = dup.getStatistics(Measurements.MEAN | Measurements.MIN_MAX | Measurements.STD_DEV)
 	dup.close()			
 	blurry = (stats.mean < 20 and stats.stdDev < 25) or  stats.max < 250
+
+	imp.show()
 	
 	IJ.run("Threshold...")
 	IJ.setThreshold(lowerBounds[0], 255)
@@ -158,7 +160,7 @@ def process(subFolder, outputDirectory, filename):
 	
 	areaFractionsArray = []
 	means = []
-	areas = []
+	totalAreas = []
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
@@ -181,7 +183,7 @@ def process(subFolder, outputDirectory, filename):
 		IJ.run(imp, "Convert to Mask", "")
 		
 		stats = imp.getStatistics(Measurements.AREA)
-		areas.append(stats.area)
+		totalAreas.append(stats.area)
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
@@ -241,7 +243,7 @@ def process(subFolder, outputDirectory, filename):
   		v, x = chan
 	  	summary[v+"-positive"] = 0
 	  	summary[v+"-intensity"] = means[x]
-	  	summary[v+"-area"] = areas[x]
+	  	summary[v+"-area"] = totalAreas[x]
 	  	fieldnames.append(v+"-positive")
 	  	fieldnames.append(v+"-intensity")
 	  	fieldnames.append(v+"-area")
