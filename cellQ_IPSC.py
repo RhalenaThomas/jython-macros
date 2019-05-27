@@ -158,6 +158,7 @@ def process(subFolder, outputDirectory, filename):
 	
 	areaFractionsArray = []
 	means = []
+	areas = []
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
@@ -173,12 +174,14 @@ def process(subFolder, outputDirectory, filename):
 		stats = imp.getStatistics(Measurements.MEAN)
 		means.append(stats.mean)
 
-		
 		IJ.run("Threshold...")
 		IJ.setThreshold(lowerBounds[x], 255)
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
+		
+		stats = imp.getStatistics(Measurements.AREA)
+		areas.append(stats.area)
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
@@ -238,8 +241,10 @@ def process(subFolder, outputDirectory, filename):
   		v, x = chan
 	  	summary[v+"-positive"] = 0
 	  	summary[v+"-intensity"] = means[x]
+	  	summary[v+"-area"] = areas[x]
 	  	fieldnames.append(v+"-positive")
-	  	fieldnames.appen(v+"-intensity")
+	  	fieldnames.append(v+"-intensity")
+	  	fieldnames.append(v+"-area")
 
 	# Adds the column for colocalization between first and second marker
   
