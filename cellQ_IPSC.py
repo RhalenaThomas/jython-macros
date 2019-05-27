@@ -126,6 +126,12 @@ def process(subFolder, outputDirectory, filename):
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
 	imp.updateAndDraw()
+	dup = imp.duplicate()
+	IJ.run(dup, "Convolve...", "text1=[-1 -1 -1 -1 -1\n-1 -1 -1 -1 -1\n-1 -1 24 -1 -1\n-1 -1 -1 -1 -1\n-1 -1 -1 -1 -1\n] normalize");
+	stats = dup.getStatistics(Measurements.MEAN | Measurements.MIN_MAX | Measurements.STD_DEV)
+	dup.close()			
+	blurry = (stats.mean < 20 and stats.stdDev < 25) or  stats.max < 250
+	
 	IJ.run("Threshold...")
 	IJ.setThreshold(lowerBounds[0], 255)
 	if displayImages:
@@ -151,6 +157,7 @@ def process(subFolder, outputDirectory, filename):
 	# It will save all the area fractions into a 2d array called areaFractionsArray
 	
 	areaFractionsArray = []
+	means = []
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
@@ -162,6 +169,11 @@ def process(subFolder, outputDirectory, filename):
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
 		imp.updateAndDraw()
+
+		stats = imp.getStatistics(Measurements.MEAN)
+		means.append(stats.mean)
+
+		
 		IJ.run("Threshold...")
 		IJ.setThreshold(lowerBounds[x], 255)
 		if displayImages:
@@ -214,17 +226,20 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-big-(>'+str(tooBigThreshold)+')'] = 0
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
+	summary['image-quality'] = blurry
 	
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
-	fieldnames = ['Name','Directory', 'Image', 'Row', 'Column', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+	fieldnames = ['Name','Directory', 'Image', 'Row', 'Column', 'size-average', 'image-quality', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 	
 	for chan in channels:
   		v, x = chan
 	  	summary[v+"-positive"] = 0
+	  	summary[v+"-intensity"] = means[x]
 	  	fieldnames.append(v+"-positive")
+	  	fieldnames.appen(v+"-intensity")
 
 	# Adds the column for colocalization between first and second marker
   
