@@ -38,9 +38,9 @@ def getChannels(subFolder):
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
   	gd.addStringField("Channel d0:", "Dapi")
-  	gd.addStringField("Channel d1:", "SSEA")
+  	gd.addStringField("Channel d1:", "MAP2")
   	gd.addStringField("Channel d2:", "")
-  	gd.addStringField("Channel d3:", "Oct3/4")
+  	gd.addStringField("Channel d3:", "")
   	gd.addMessage("")
 	gd.addStringField("What would you like the output file to be named:", "output_"+ subFolder)
   	
