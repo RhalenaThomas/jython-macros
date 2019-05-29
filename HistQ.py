@@ -30,7 +30,7 @@ from ij.WindowManager import setTempCurrentImage
 
 MF = MaximumFinder()
 
-# To enable displayImages mode (such as for testing thresholds), make displayImages = True
+# To enable displayxImages mode (such as for testing thresholds), make displayImages = True
 displayImages = False
 
 
@@ -106,7 +106,7 @@ def process(subFolder, outputDirectory, filename):
 	IJ.run("Threshold...")
 
 	
-	IJ.setThreshold(218, 255)
+	IJ.setThreshold(218, 245)
 
 	IJ.run(imp, "Convert to Mask", "")
 
@@ -159,8 +159,7 @@ def process(subFolder, outputDirectory, filename):
 	imp.updateAndDraw()
 	
 	IJ.run("Threshold...")
-	IJ.setThreshold(0, lowerBounds[0])
-	WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
+	IJ.setThreshold(30, lowerBounds[0])
 	if displayImages:
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 	IJ.run(imp, "Convert to Mask", "")
@@ -364,7 +363,7 @@ def process(subFolder, outputDirectory, filename):
 
 	# Opens and appends one line on the final csv file for the subfolder (remember that this is still inside the loop that goes through each image)
 
-	with open(outputDirectory + "/" + outputName +".csv", 'a') as csvfile:		
+	with open(outputDirectory + "/output.csv", 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
 		if os.path.getsize(outputDirectory + "/" + outputName +".csv") < 1:
@@ -438,6 +437,9 @@ with open(outputDirectory + "log.txt", "w") as log:
 	log.write("_______________________________________________________________________\n")
 	log.write("Beginning main directory loop: \n")
 	log.write("\n")
+
+	open(outputDirectory + "/output.csv", 'w').close
+	
 	for inde, subFolder in enumerate(directories):
 	
 		log.write("______________________________________\n")
@@ -448,10 +450,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 		outputName = allOutputNames[inde]
 	
 		log.write("Channels: "+ str(channels) +"\n")
-		log.write("Output Name: "+ outputName +"\n")
-	
 		
-		open(outputDirectory + "/" + outputName +".csv", 'w').close
 		lowerBounds = [200, 200, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
@@ -464,6 +463,8 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 		log.write("_________________________\n")
 		log.write("Begining loop for each image \n")
+
+
 		
 		for filename in os.listdir(inputDirectory + subFolder): 
 			if filename.endswith(".TIF"):
@@ -480,6 +481,6 @@ with open(outputDirectory + "log.txt", "w") as log:
       (  /  )
        \(__)|"""
 	
-	log.write(cat)
+	log.write(cat)	
 
 print(cat)
