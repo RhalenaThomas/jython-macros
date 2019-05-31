@@ -38,9 +38,9 @@ def getChannels(subFolder):
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
   	gd.addStringField("Channel d0:", "Dapi")
-  	gd.addStringField("Channel d1:", "SSEA")
+  	gd.addStringField("Channel d1:", "MAP2")
   	gd.addStringField("Channel d2:", "")
-  	gd.addStringField("Channel d3:", "Oct3/4")
+  	gd.addStringField("Channel d3:", "")
   	gd.addMessage("")
 	gd.addStringField("What would you like the output file to be named:", "output_"+ subFolder)
   	
@@ -126,6 +126,14 @@ def process(subFolder, outputDirectory, filename):
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
 	imp.updateAndDraw()
+	dup = imp.duplicate()
+	IJ.run(dup, "Convolve...", "text1=[-1 -1 -1 -1 -1\n-1 -1 -1 -1 -1\n-1 -1 24 -1 -1\n-1 -1 -1 -1 -1\n-1 -1 -1 -1 -1\n] normalize");
+	stats = dup.getStatistics(Measurements.MEAN | Measurements.MIN_MAX | Measurements.STD_DEV)
+	dup.close()			
+	blurry = (stats.mean < 20 and stats.stdDev < 25) or  stats.max < 250
+
+	imp.show()
+	
 	IJ.run("Threshold...")
 	IJ.setThreshold(lowerBounds[0], 255)
 	if displayImages:
@@ -151,6 +159,8 @@ def process(subFolder, outputDirectory, filename):
 	# It will save all the area fractions into a 2d array called areaFractionsArray
 	
 	areaFractionsArray = []
+	means = []
+	totalAreas = []
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
@@ -162,11 +172,19 @@ def process(subFolder, outputDirectory, filename):
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
 		imp.updateAndDraw()
+
+		stats = imp.getStatistics(Measurements.MEAN)
+		means.append(stats.mean)
+
 		IJ.run("Threshold...")
 		IJ.setThreshold(lowerBounds[x], 255)
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
+	
+	
+		stats = imp.getStatistics(Measurements.AREA_FRACTION)
+		totalAreas.append(stats.areaFraction)
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
@@ -186,8 +204,9 @@ def process(subFolder, outputDirectory, filename):
 	
 	# Figures out what well the image is a part of
 
-	row = filename[19:20]
-	column = str(int(filename[20:22]))
+	ind = filename.index("p00_0_")
+	row = filename[ind + 6: ind + 7]
+	column = str(int(filename[ind + 7:ind + 9]))
 
 	# Creates the summary dictionary which will correspond to a single row in the output csv, with each key being a column
 
@@ -213,17 +232,22 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-big-(>'+str(tooBigThreshold)+')'] = 0
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
+	summary['image-quality'] = blurry
 	
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
-	fieldnames = ['Name','Directory', 'Image', 'Row', 'Column', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+	fieldnames = ['Name','Directory', 'Image', 'Row', 'Column', 'size-average', 'image-quality', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 	
 	for chan in channels:
   		v, x = chan
 	  	summary[v+"-positive"] = 0
+	  	summary[v+"-intensity"] = means[x]
+	  	summary[v+"-area"] = totalAreas[x]
 	  	fieldnames.append(v+"-positive")
+	  	fieldnames.append(v+"-intensity")
+	  	fieldnames.append(v+"-area")
 
 	# Adds the column for colocalization between first and second marker
   
@@ -245,41 +269,44 @@ def process(subFolder, outputDirectory, filename):
 	# Loops through each particle and adds it to each field that it is True for. 
 
 	areaCounter = 0
-	for z, area  in enumerate(areas):
-		if area > tooBigThreshold:
-			summary['too-big-(>'+str(tooBigThreshold)+')'] += 1		
-		elif area < tooSmallThreshold:
-			summary['too-small-(<'+str(tooSmallThreshold)+')'] += 1
-		else:
 
-			summary['#nuclei'] += 1
-			areaCounter += area
-
-			temp = 0
-			for y, chan in enumerate(channels):
-				v, x = chan
-				if areaFractionsArray[y][z] > areaFractionThreshold:
-					summary[chan[0]+'-positive'] += 1
-					if x != 0:
-						temp += 1
-
-			if temp == 0:
-				summary['all-negative'] += 1
+	if not (areas is None):
+		for z, area  in enumerate(areas):
+			if not (area is None or summary is None):
+				if area > tooBigThreshold:
+					summary['too-big-(>'+str(tooBigThreshold)+')'] += 1		
+				elif area < tooSmallThreshold:
+					summary['too-small-(<'+str(tooSmallThreshold)+')'] += 1
+				else:
 		
-			if len(channels) > 2:
-				if areaFractionsArray[1][z] > areaFractionThreshold:	
-					if areaFractionsArray[2][z] > areaFractionThreshold:
-						summary[channels[1][0]+'-'+channels[2][0]+'-positive'] += 1
-	
-			if len(channels) > 3:
-				if areaFractionsArray[1][z] > areaFractionThreshold:	
-					if areaFractionsArray[3][z] > areaFractionThreshold:
-						summary[channels[1][0]+'-'+channels[3][0]+'-positive'] += 1
-				if areaFractionsArray[2][z] > areaFractionThreshold:	
-					if areaFractionsArray[3][z] > areaFractionThreshold:
-						summary[channels[2][0]+'-'+channels[3][0]+'-positive'] += 1
-						if areaFractionsArray[1][z] > areaFractionThreshold:
-							summary[channels[1][0]+'-'+channels[2][0]+'-' +channels[3][0]+ '-positive'] += 1
+					summary['#nuclei'] += 1
+					areaCounter += area
+		
+					temp = 0
+					for y, chan in enumerate(channels):
+						v, x = chan
+						if areaFractionsArray[y][z] > areaFractionThreshold:
+							summary[chan[0]+'-positive'] += 1
+							if x != 0:
+								temp += 1
+		
+					if temp == 0:
+						summary['all-negative'] += 1
+				
+					if len(channels) > 2:
+						if areaFractionsArray[1][z] > areaFractionThreshold:	
+							if areaFractionsArray[2][z] > areaFractionThreshold:
+								summary[channels[1][0]+'-'+channels[2][0]+'-positive'] += 1
+			
+					if len(channels) > 3:
+						if areaFractionsArray[1][z] > areaFractionThreshold:	
+							if areaFractionsArray[3][z] > areaFractionThreshold:
+								summary[channels[1][0]+'-'+channels[3][0]+'-positive'] += 1
+						if areaFractionsArray[2][z] > areaFractionThreshold:	
+							if areaFractionsArray[3][z] > areaFractionThreshold:
+								summary[channels[2][0]+'-'+channels[3][0]+'-positive'] += 1
+								if areaFractionsArray[1][z] > areaFractionThreshold:
+									summary[channels[1][0]+'-'+channels[2][0]+'-' +channels[3][0]+ '-positive'] += 1
 
 	# Calculate the average of the particles sizes 
 
@@ -378,7 +405,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 		
 		open(outputDirectory + "/" + outputName +".csv", 'w').close
-		lowerBounds = [30, 30, 30, 30]
+		lowerBounds = [33, 33, 33, 33]
 		for chan in channels:
 			v, x = chan
 			if v in thresholds:
@@ -392,7 +419,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 		log.write("Begining loop for each image \n")
 		
 		for filename in os.listdir(inputDirectory + subFolder): 
-			if filename.startswith("scan_Plate_R") and filename.endswith("d0.TIF"):
+			if "Plate_R" in filename and filename.endswith("d0.TIF"):
 				log.write("Processing: " + filename +" \n")
 				process(subFolder, outputDirectory, filename);
 		log.write("_________________________\n")
