@@ -38,6 +38,8 @@ displayImages = False
 def getChannels(subFolder):  
   	gd = GenericDialog("Channel Options")  
 
+	gd.addStringField("Brain Region:", "")
+
 	gd.addMessage("Name the markers associated with this directory:")
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
@@ -51,6 +53,8 @@ def getChannels(subFolder):
   	gd.showDialog()
 
 	channelNames = []
+
+	region = gd.getNextString()
   	
   	channelNames.append([gd.getNextString(), 0])
   	channelNames.append([gd.getNextString(), 1])
@@ -66,7 +70,7 @@ def getChannels(subFolder):
 		print "User canceled dialog!"  
 		return
 		
-  	return channels, outputName
+  	return region, channels, outputName
 
 # Function to get the thresholds.
 
@@ -454,11 +458,12 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 	allChannels = []
 	allOutputNames = []
+	allRegions = []
 	for subFolder in directories:
-		chan, outputName = getChannels(subFolder)
+		region, chan, outputName = getChannels(subFolder)
 		allChannels.append(chan)
 		allOutputNames.append(outputName)
-	
+		allRegions.append(region)
 
 
 	
@@ -478,13 +483,15 @@ with open(outputDirectory + "log.txt", "w") as log:
 		
 		channels = allChannels[inde]
 		outputName = allOutputNames[inde]
+		region = allRegions[inde]
+
 	
 		log.write("Channels: "+ str(channels) +"\n")
 		
 		lowerBounds = [200, 200, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
-			if v in thresholds:
+			if (v + '-' + region) in thresholds:
 				lowerBounds[x] = int(thresholds[v])
 	
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
