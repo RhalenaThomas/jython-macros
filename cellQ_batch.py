@@ -360,8 +360,6 @@ with open(outputDirectory + "log.txt", "w") as log:
 			
 			upDirectories[subFolder] = dire
 
-	print(upDirectories)
-	
 	# A few default options
 	
 	areaFractionThreshold = 0.1
