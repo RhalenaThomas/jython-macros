@@ -47,8 +47,6 @@ def getChannels(subFolder):
   	gd.addStringField("Channel 2:", "DAB")
   	gd.addStringField("Channel 1:", "HEMO")
   	gd.addStringField("Channel 3:", "")
-  	gd.addMessage("")
-	gd.addStringField("What would you like the output file to be named:", "output")
   	
   	gd.showDialog()
 
@@ -59,7 +57,6 @@ def getChannels(subFolder):
   	channelNames.append([gd.getNextString(), 0])
   	channelNames.append([gd.getNextString(), 1])
 	channelNames.append([gd.getNextString(), 2])
-  	outputName = gd.getNextString()
 
 	channels = []
 	for i,v in enumerate(channelNames):
@@ -70,7 +67,7 @@ def getChannels(subFolder):
 		print "User canceled dialog!"  
 		return
 		
-  	return region, channels, outputName
+  	return region, channels
 
 # Function to get the thresholds.
 
@@ -396,7 +393,7 @@ def process(subFolder, outputDirectory, filename):
 	with open(outputDirectory + "/output.csv", 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
-		if os.path.getsize(outputDirectory + "/" + outputName +".csv") < 1:
+		if os.path.getsize(outputDirectory + "/output.csv") < 1:
 			writer.writeheader()
 		writer.writerow(summary)
 
@@ -457,12 +454,10 @@ with open(outputDirectory + "log.txt", "w") as log:
 	# Set arrays to store data for each subfolder
 	
 	allChannels = []
-	allOutputNames = []
 	allRegions = []
 	for subFolder in directories:
-		region, chan, outputName = getChannels(subFolder)
+		region, chan = getChannels(subFolder)
 		allChannels.append(chan)
-		allOutputNames.append(outputName)
 		allRegions.append(region)
 
 
@@ -482,7 +477,6 @@ with open(outputDirectory + "log.txt", "w") as log:
 		log.write("\n")
 		
 		channels = allChannels[inde]
-		outputName = allOutputNames[inde]
 		region = allRegions[inde]
 
 	
