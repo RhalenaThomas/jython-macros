@@ -220,7 +220,7 @@ def process(subDir, subsubDir, outputDirectory, filename):
 			
 	summary['Image'] = filename
 	summary['Directory'] = subDir
-	summaru['SubDirectory'] = subsubDir
+	summary['SubDirectory'] = subsubDir
 	summary['Row'] = row
 	summary['Column'] = column
 

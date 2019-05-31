@@ -226,7 +226,7 @@ def process(subFolder, outputDirectory, filename):
 		ic.convertToGray8();
 		imp.updateAndDraw()
 		IJ.run("Threshold...")
-		IJ.setThreshold(0, lowerBounds[0])
+		IJ.setThreshold(20, lowerBounds[0])
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 		IJ.run(imp, "Convert to Mask", "")
