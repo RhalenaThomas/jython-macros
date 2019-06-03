@@ -30,13 +30,15 @@ from ij.WindowManager import setTempCurrentImage
 
 MF = MaximumFinder()
 
-# To enable displayImages mode (such as for testing thresholds), make displayImages = True
+# To enable displayxImages mode (such as for testing thresholds), make displayImages = True
 displayImages = False
 
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
   	gd = GenericDialog("Channel Options")  
+
+	gd.addStringField("Brain Region:", "")
 
 	gd.addMessage("Name the markers associated with this directory:")
 	gd.addMessage(inputDirectory + subFolder)  
@@ -45,17 +47,16 @@ def getChannels(subFolder):
   	gd.addStringField("Channel 2:", "DAB")
   	gd.addStringField("Channel 1:", "HEMO")
   	gd.addStringField("Channel 3:", "")
-  	gd.addMessage("")
-	gd.addStringField("What would you like the output file to be named:", "output")
   	
   	gd.showDialog()
 
 	channelNames = []
+
+	region = gd.getNextString()
   	
   	channelNames.append([gd.getNextString(), 0])
   	channelNames.append([gd.getNextString(), 1])
 	channelNames.append([gd.getNextString(), 2])
-  	outputName = gd.getNextString()
 
 	channels = []
 	for i,v in enumerate(channelNames):
@@ -66,7 +67,7 @@ def getChannels(subFolder):
 		print "User canceled dialog!"  
 		return
 		
-  	return channels, outputName
+  	return region, channels
 
 # Function to get the thresholds.
 
@@ -89,6 +90,27 @@ def getThresholds():
 				thresholds = row
 	return thresholds
 
+def getNames():
+	info = []
+	
+	gd = GenericDialog("Naming options")
+	gd.addChoice("How would you like to output your results?", ["default", "use information csv file"], "default")
+	gd.showDialog()
+
+	choice = gd.getNextChoice()
+
+	log.write("Option: " + choice + "\n")
+
+	if choice == "use information csv file":
+		path = OpenDialog("Open the names csv file")
+		log.write("File used: " + path.getPath() + "\n")
+		
+		with open(path.getPath()) as csvfile:
+			reader = csv.DictReader(csvfile)
+			for row in reader:
+				info.append(row)
+	
+	return info
 
 ############# Main loop, will run for every image. ##############
 
@@ -106,7 +128,7 @@ def process(subFolder, outputDirectory, filename):
 	IJ.run("Threshold...")
 
 	
-	IJ.setThreshold(218, 255)
+	IJ.setThreshold(218, 245)
 
 	IJ.run(imp, "Convert to Mask", "")
 
@@ -159,8 +181,7 @@ def process(subFolder, outputDirectory, filename):
 	imp.updateAndDraw()
 	
 	IJ.run("Threshold...")
-	IJ.setThreshold(0, lowerBounds[0])
-	WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
+	IJ.setThreshold(30, lowerBounds[0])
 	if displayImages:
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 	IJ.run(imp, "Convert to Mask", "")
@@ -205,7 +226,7 @@ def process(subFolder, outputDirectory, filename):
 		ic.convertToGray8();
 		imp.updateAndDraw()
 		IJ.run("Threshold...")
-		IJ.setThreshold(0, lowerBounds[0])
+		IJ.setThreshold(20, lowerBounds[0])
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
 		IJ.run(imp, "Convert to Mask", "")
@@ -268,10 +289,15 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-big-(>'+str(tooBigThreshold)+')'] = 0
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
+	for row in info:
+		if row['Animal ID'] == filename[:5]:
+			for key, value in row.items():
+				summary[key] = value;
+
 	
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
-	fieldnames = ['Name','Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+	fieldnames = ['E', 'PFFs', 'Animal ID', 'Time treatment', 'Treatment', 'Name','Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 
@@ -364,10 +390,10 @@ def process(subFolder, outputDirectory, filename):
 
 	# Opens and appends one line on the final csv file for the subfolder (remember that this is still inside the loop that goes through each image)
 
-	with open(outputDirectory + "/" + outputName +".csv", 'a') as csvfile:		
+	with open(outputDirectory + "/output.csv", 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
-		if os.path.getsize(outputDirectory + "/" + outputName +".csv") < 1:
+		if os.path.getsize(outputDirectory + "/output.csv") < 1:
 			writer.writeheader()
 		writer.writerow(summary)
 
@@ -422,22 +448,28 @@ with open(outputDirectory + "log.txt", "w") as log:
 	log.write("________________________\n")
 	log.write("Getting thresholds...\n")
 	thresholds = getThresholds()
+
+	info = getNames()
 	
 	# Set arrays to store data for each subfolder
 	
 	allChannels = []
-	allOutputNames = []
+	allRegions = []
 	for subFolder in directories:
-		chan, outputName = getChannels(subFolder)
+		region, chan = getChannels(subFolder)
 		allChannels.append(chan)
-		allOutputNames.append(outputName)
-	
+		allRegions.append(region)
+
+
 	
 	# Loop that goes through each sub folder. 
 	
 	log.write("_______________________________________________________________________\n")
 	log.write("Beginning main directory loop: \n")
 	log.write("\n")
+
+	open(outputDirectory + "/output.csv", 'w').close
+	
 	for inde, subFolder in enumerate(directories):
 	
 		log.write("______________________________________\n")
@@ -445,17 +477,15 @@ with open(outputDirectory + "log.txt", "w") as log:
 		log.write("\n")
 		
 		channels = allChannels[inde]
-		outputName = allOutputNames[inde]
+		region = allRegions[inde]
+
 	
 		log.write("Channels: "+ str(channels) +"\n")
-		log.write("Output Name: "+ outputName +"\n")
-	
 		
-		open(outputDirectory + "/" + outputName +".csv", 'w').close
 		lowerBounds = [200, 200, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
-			if v in thresholds:
+			if (v + '-' + region) in thresholds:
 				lowerBounds[x] = int(thresholds[v])
 	
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
@@ -464,6 +494,8 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 		log.write("_________________________\n")
 		log.write("Begining loop for each image \n")
+
+
 		
 		for filename in os.listdir(inputDirectory + subFolder): 
 			if filename.endswith(".TIF"):
@@ -480,6 +512,6 @@ with open(outputDirectory + "log.txt", "w") as log:
       (  /  )
        \(__)|"""
 	
-	log.write(cat)
+	log.write(cat)	
 
 print(cat)

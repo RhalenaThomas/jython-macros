@@ -33,8 +33,8 @@ displayImages = False
 def getChannels(subFolder):  
   	gd = GenericDialog("Channel Options")  
 
-	gd.addMessage("Name the markers associated with this directory:")
-	gd.addMessage(inputDirectory + subFolder)  
+	gd.addMessage("Name the markers associated with these subfolder:")
+	gd.addMessage(subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
   	gd.addStringField("Channel d0:", "Dapi")
@@ -42,7 +42,6 @@ def getChannels(subFolder):
   	gd.addStringField("Channel d2:", "")
   	gd.addStringField("Channel d3:", "")
   	gd.addMessage("")
-	gd.addStringField("What would you like the output file to be named:", "output_"+ subFolder)
   	
   	gd.showDialog()
 
@@ -52,7 +51,6 @@ def getChannels(subFolder):
   	channelNames.append([gd.getNextString(), 1])
 	channelNames.append([gd.getNextString(), 2])
 	channelNames.append([gd.getNextString(), 3])
-  	outputName = gd.getNextString()
 
 	channels = []
 	for i,v in enumerate(channelNames):
@@ -63,7 +61,7 @@ def getChannels(subFolder):
 		print "User canceled dialog!"  
 		return
 		
-  	return channels, outputName
+  	return channels
 
 # Function to get the names for each well
 
@@ -113,7 +111,9 @@ def getThresholds():
 
 ############# Main loop, will run for every image. ##############
 
-def process(subFolder, outputDirectory, filename):
+def process(subDir, subsubDir, outputDirectory, filename):
+
+	subFolder = subDir + "/" + subsubDir
 
 	# Opens the d0 image and sets default properties
 	
@@ -219,7 +219,8 @@ def process(subFolder, outputDirectory, filename):
 			summary['Name'] = nameArray[row][column]
 			
 	summary['Image'] = filename
-	summary['Directory'] = subFolder
+	summary['Directory'] = subDir
+	summary['SubDirectory'] = subsubDir
 	summary['Row'] = row
 	summary['Column'] = column
 
@@ -236,7 +237,7 @@ def process(subFolder, outputDirectory, filename):
 	
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
-	fieldnames = ['Name','Directory', 'Image', 'Row', 'Column', 'size-average', 'image-quality', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+	fieldnames = ['Name','Directory', 'SubDirectory', 'Image', 'Row', 'Column', 'size-average', 'image-quality', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 	
@@ -347,13 +348,18 @@ with open(outputDirectory + "log.txt", "w") as log:
 	log.write("Output directory selected: " + outputDirectory + "\n")
 	
 	# Finds all the subfolders in the main directory
-	
-	directories = []
-	
+
+	upDirectories = {}
+
 	for subFolder in os.listdir(inputDirectory):
 		if os.path.isdir(inputDirectory + subFolder):
-			directories.append(subFolder)
-	
+			dire = []
+			for subsubFolder in os.listdir(inputDirectory + subFolder):
+				if os.path.isdir(inputDirectory + subFolder + "/" + subsubFolder):
+					dire.append(subsubFolder)
+			
+			upDirectories[subFolder] = dire
+
 	# A few default options
 	
 	areaFractionThreshold = 0.1
@@ -379,11 +385,11 @@ with open(outputDirectory + "log.txt", "w") as log:
 	# Set arrays to store data for each subfolder
 	
 	allChannels = []
-	allOutputNames = []
-	for subFolder in directories:
-		chan, outputName = getChannels(subFolder)
-		allChannels.append(chan)
-		allOutputNames.append(outputName)
+	for inde, subFolder in enumerate(upDirectories):
+		if inde == 0:
+			for subsubFolder in upDirectories[subFolder]:
+				chan = getChannels(subsubFolder)
+				allChannels.append(chan)
 	
 	
 	# Loop that goes through each sub folder. 
@@ -391,40 +397,41 @@ with open(outputDirectory + "log.txt", "w") as log:
 	log.write("_______________________________________________________________________\n")
 	log.write("Beginning main directory loop: \n")
 	log.write("\n")
-	for inde, subFolder in enumerate(directories):
-	
-		log.write("______________________________________\n")
-		log.write("Subfolder: "+ subFolder +"\n")
-		log.write("\n")
+
+	for key, subFolder in upDirectories.items():
+		for inde, subsubFolder in enumerate(subFolder):
 		
-		channels = allChannels[inde]
-		outputName = allOutputNames[inde]
-	
-		log.write("Channels: "+ str(channels) +"\n")
-		log.write("Output Name: "+ outputName +"\n")
-	
+			log.write("______________________________________\n")
+			log.write("Subfolder: "+ subsubFolder +"\n")
+			log.write("\n")
+			
+			channels = allChannels[inde]
 		
-		open(outputDirectory + "/" + outputName +".csv", 'w').close
-		lowerBounds = [33, 33, 33, 33]
-		for chan in channels:
-			v, x = chan
-			if v in thresholds:
-				lowerBounds[x] = int(thresholds[v])
-	
-		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
-	
-		# Finds all correct EVOS split channel d0 files and runs through them one at a time (see main loop process() on top)
-	
-		log.write("_________________________\n")
-		log.write("Begining loop for each image \n")
+			log.write("Channels: "+ str(channels) +"\n")
 		
-		for filename in os.listdir(inputDirectory + subFolder): 
-			if "Plate_R" in filename and filename.endswith("d0.TIF"):
-				log.write("Processing: " + filename +" \n")
-				process(subFolder, outputDirectory, filename);
-		log.write("_________________________\n")
-		log.write("Completed subfolder " + subFolder + ".  \n")
-		log.write("\n")
+			outputName = "output_" + key + "_" + subsubFolder
+			
+			open(outputDirectory + "/" + outputName + ".csv", 'w').close
+			lowerBounds = [33, 33, 33, 33]
+			for chan in channels:
+				v, x = chan
+				if v in thresholds:
+					lowerBounds[x] = int(thresholds[v])
+		
+			log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
+		
+			# Finds all correct EVOS split channel d0 files and runs through them one at a time (see main loop process() on top)
+		
+			log.write("_________________________\n")
+			log.write("Begining loop for each image \n")
+			
+			for filename in os.listdir(inputDirectory + key + "/" + subsubFolder): 
+				if "Plate_R" in filename and filename.endswith("d0.TIF"):
+					log.write("Processing: " + filename +" \n")
+					process(key, subsubFolder, outputDirectory, filename);
+			log.write("_________________________\n")
+			log.write("Completed subfolder " + key + "/" + subsubFolder + ".  \n")
+			log.write("\n")
 
 	cat = """
 
