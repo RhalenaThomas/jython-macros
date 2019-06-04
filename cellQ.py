@@ -122,7 +122,6 @@ def process(subFolder, outputDirectory, filename):
 	
 	# Sets the threshold and watersheds. for more details on image processing, see https://imagej.nih.gov/ij/developer/api/ij/process/ImageProcessor.html 
 
-	imp.show()
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
 	imp.updateAndDraw()
@@ -132,10 +131,8 @@ def process(subFolder, outputDirectory, filename):
 	dup.close()			
 	blurry = (stats.mean < 20 and stats.stdDev < 25) or  stats.max < 250
 
-	imp.show()
 	
-	IJ.run("Threshold...")
-	IJ.setThreshold(lowerBounds[0], 255)
+	IJ.setThreshold(imp, lowerBounds[0], 255)
 	if displayImages:
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 	IJ.run(imp, "Convert to Mask", "")
@@ -144,7 +141,8 @@ def process(subFolder, outputDirectory, filename):
 	# Counts and measures the area of particles and adds them to a table called areas. Also adds them to the ROI manager
 
 	table = ResultsTable()
-	roim = RoiManager()
+	roim = RoiManager(True)
+	ParticleAnalyzer.setRoiManager(roim); 
 	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
 	pa.setHideOutputImage(True)
 	pa.analyze(imp)
@@ -168,7 +166,6 @@ def process(subFolder, outputDirectory, filename):
 		imp = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("d0.TIF", "d" + str(x) + ".TIF"))
 		IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 
-		imp.show()
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
 		imp.updateAndDraw()
@@ -176,8 +173,7 @@ def process(subFolder, outputDirectory, filename):
 		stats = imp.getStatistics(Measurements.MEAN)
 		means.append(stats.mean)
 
-		IJ.run("Threshold...")
-		IJ.setThreshold(lowerBounds[x], 255)
+		IJ.setThreshold(imp, lowerBounds[x], 255)
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
@@ -188,7 +184,7 @@ def process(subFolder, outputDirectory, filename):
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
-		for roi in roim.getRoiManager().getRoisAsArray():
+		for roi in roim.getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
 	  		areaFractions.append(stats.areaFraction)

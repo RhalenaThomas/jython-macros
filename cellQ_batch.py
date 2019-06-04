@@ -131,10 +131,7 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	dup.close()			
 	blurry = (stats.mean < 20 and stats.stdDev < 25) or  stats.max < 250
 
-	imp.show()
-	
-	IJ.run("Threshold...")
-	IJ.setThreshold(lowerBounds[0], 255)
+	IJ.setThreshold(imp, lowerBounds[0], 255)
 	if displayImages:
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 	IJ.run(imp, "Convert to Mask", "")
@@ -143,7 +140,8 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	# Counts and measures the area of particles and adds them to a table called areas. Also adds them to the ROI manager
 
 	table = ResultsTable()
-	roim = RoiManager()
+	roim = RoiManager(True)
+	ParticleAnalyzer.setRoiManager(roim); 
 	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
 	pa.setHideOutputImage(True)
 	pa.analyze(imp)
@@ -173,9 +171,7 @@ def process(subDir, subsubDir, outputDirectory, filename):
 		stats = imp.getStatistics(Measurements.MEAN)
 		means.append(stats.mean)
 
-		imp.show()
-		IJ.run("Threshold...")
-		IJ.setThreshold(lowerBounds[x], 255)
+		IJ.setThreshold(imp, lowerBounds[x], 255)
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
@@ -186,7 +182,7 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
-		for roi in roim.getRoiManager().getRoisAsArray():
+		for roi in roim.getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
 	  		areaFractions.append(stats.areaFraction)
