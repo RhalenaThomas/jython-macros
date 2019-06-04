@@ -157,6 +157,7 @@ def process(subFolder, outputDirectory, filename):
 	# It will save all the area fractions into a 2d array called areaFractionsArray
 	
 	areaFractionsArray = []
+	areaMeansArray = []
 	means = []
 	totalAreas = []
 	for chan in channels:
@@ -184,14 +185,17 @@ def process(subFolder, outputDirectory, filename):
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
+		areaMeans = []
 		for roi in roim.getRoisAsArray():
 	  		imp.setRoi(roi)
-	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
+	  		stats = imp.getStatistics(Measurements.AREA_FRACTION | Measurements.MEAN)
 	  		areaFractions.append(stats.areaFraction)
+	  		areaMeans.append(stats.mean)
 	
 		# Saves the results in areaFractionArray
 	  			
 		areaFractionsArray.append(areaFractions)
+		areaMeansArray.append(sum(areaMeans)/len(areaMeans))
 
 		if not displayImages:
 			imp.changes = False
@@ -241,9 +245,13 @@ def process(subFolder, outputDirectory, filename):
 	  	summary[v+"-positive"] = 0
 	  	summary[v+"-intensity"] = means[x]
 	  	summary[v+"-area"] = totalAreas[x]
+	  	summary[v+"-intensity-in-nuclei"] = areaMeansArray[x]
+	  	summary[v+"-area-fraction-in-nuclei"] = sum(areaFractionsArray[x])/len(areaFractionsArray[x])
 	  	fieldnames.append(v+"-positive")
 	  	fieldnames.append(v+"-intensity")
 	  	fieldnames.append(v+"-area")
+	  	fieldnames.append(v+"-intensity-in-nuclei")
+	  	fieldnames.append(v+"-area-fraction-in-nuclei")
 
 	# Adds the column for colocalization between first and second marker
   
