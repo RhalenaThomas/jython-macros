@@ -122,7 +122,6 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	
 	# Sets the threshold and watersheds. for more details on image processing, see https://imagej.nih.gov/ij/developer/api/ij/process/ImageProcessor.html 
 
-	imp.show()
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
 	imp.updateAndDraw()
@@ -167,8 +166,6 @@ def process(subDir, subsubDir, outputDirectory, filename):
 		
 		imp = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("d0.TIF", "d" + str(x) + ".TIF"))
 		IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
-
-		imp.show()
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
 		imp.updateAndDraw()
@@ -176,6 +173,7 @@ def process(subDir, subsubDir, outputDirectory, filename):
 		stats = imp.getStatistics(Measurements.MEAN)
 		means.append(stats.mean)
 
+		imp.show()
 		IJ.run("Threshold...")
 		IJ.setThreshold(lowerBounds[x], 255)
 		if displayImages:
