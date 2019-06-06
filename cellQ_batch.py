@@ -129,7 +129,7 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	IJ.run(dup, "Convolve...", "text1=[-1 -1 -1 -1 -1\n-1 -1 -1 -1 -1\n-1 -1 24 -1 -1\n-1 -1 -1 -1 -1\n-1 -1 -1 -1 -1\n] normalize");
 	stats = dup.getStatistics(Measurements.MEAN | Measurements.MIN_MAX | Measurements.STD_DEV)
 	dup.close()			
-	blurry = (stats.mean < 20 and stats.stdDev < 25) or  stats.max < 250
+	blurry = (stats.mean < 18 and stats.stdDev < 22) or  stats.max < 250
 
 	IJ.setThreshold(imp, lowerBounds[0], 255)
 	if displayImages:
@@ -172,6 +172,13 @@ def process(subDir, subsubDir, outputDirectory, filename):
 		stats = imp.getStatistics(Measurements.MEAN)
 		means.append(stats.mean)
 
+		areaMeans = []
+		for roi in roim.getRoisAsArray():
+	  		imp.setRoi(roi)
+	  		stats = imp.getStatistics(Measurements.MEAN)
+	  		areaMeans.append(stats.mean)
+
+
 		IJ.setThreshold(imp, lowerBounds[x], 255)
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
@@ -183,12 +190,11 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
-		areaMeans = []
+
 		for roi in roim.getRoisAsArray():
 	  		imp.setRoi(roi)
-	  		stats = imp.getStatistics(Measurements.AREA_FRACTION | Measurements.MEAN)
+	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
 	  		areaFractions.append(stats.areaFraction)
-	  		areaMeans.append(stats.mean)
 	
 		# Saves the results in areaFractionArray
 	  			
