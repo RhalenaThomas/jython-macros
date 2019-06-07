@@ -33,7 +33,6 @@ MF = MaximumFinder()
 # To enable displayxImages mode (such as for testing thresholds), make displayImages = True
 displayImages = False
 
-
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
   	gd = GenericDialog("Channel Options")  
@@ -44,8 +43,8 @@ def getChannels(subFolder):
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
-  	gd.addStringField("Channel 2:", "DAB")
   	gd.addStringField("Channel 1:", "HEMO")
+  	gd.addStringField("Channel 2:", "DAB")
   	gd.addStringField("Channel 3:", "")
   	
   	gd.showDialog()
@@ -301,8 +300,8 @@ def process(subFolder, outputDirectory, filename):
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 
-	summary["organoid-area"] = bigareas[0]
-	fieldnames.append("organoid-area")
+	summary["tissue-area"] = bigareas[0]
+	fieldnames.append("tissue-area")
 	
 	for chan in channels:
   		v, x = chan
@@ -312,13 +311,17 @@ def process(subFolder, outputDirectory, filename):
 	  	summary[v+"-intensity"] = intensities[x]
 	  	fieldnames.append(v+"-intensity")
 
-	  	summary[v+"-blobsarea"] = blobsarea[x]
+	  	summary[v+"-blobsarea"] = blobsarea[x] 
 	  	fieldnames.append(v+"-blobsarea")
+
+		summary[v+"-area/tissue-area"] = blobsarea[x] / bigareas[0]
+		fieldnames.append(v+"-area/tissue-area")
 
 	  	summary[v+"-blobsnuclei"] = blobsnuclei[x]
 	  	fieldnames.append(v+"-blobsnuclei")
 
-
+		summary[v+"-particles/tissue-area"] = blobsnuclei[x] / bigareas[0]
+		fieldnames.append(v+"-particles/tissue-area")	
 	  	
 	# Adds the column for colocalization between first and second marker
   
@@ -482,11 +485,11 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 		log.write("Channels: "+ str(channels) +"\n")
 		
-		lowerBounds = [200, 200, 205, 205, 205]
+		lowerBounds = [209, 180, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
 			if (v + '-' + region) in thresholds:
-				lowerBounds[x] = int(thresholds[v])
+				lowerBounds[x] = int(thresholds[v + '-' + region])
 	
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
 	
