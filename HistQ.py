@@ -293,7 +293,7 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
 	for row in info:
-		if row['Animal ID'] == filename[:5]:
+		if row['Animal ID'] == filename.rpartition('-')[0]:
 			for key, value in row.items():
 				summary[key] = value;
 
