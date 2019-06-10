@@ -1,5 +1,5 @@
 '''
-		EMCC: Evos Marker Cell Counter 			- ImageJ Macro written in  Python 
+		HistQ: Mouse Histology Cell Quantification 			- ImageJ Macro written in  Python 
 		
 		Input 		- Folders containing split channel images for Organoids
 					- The filenames of the images must end in ch00, ch01, ch02, ch03
@@ -33,19 +33,20 @@ MF = MaximumFinder()
 # To enable displayxImages mode (such as for testing thresholds), make displayImages = True
 displayImages = False
 
-
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
   	gd = GenericDialog("Channel Options")  
 
 	gd.addStringField("Brain Region:", "")
 
+	gd.addStringField("Minimum size:", "24")
+
 	gd.addMessage("Name the markers associated with this directory:")
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
-  	gd.addStringField("Channel 2:", "DAB")
   	gd.addStringField("Channel 1:", "HEMO")
+  	gd.addStringField("Channel 2:", "DAB")
   	gd.addStringField("Channel 3:", "")
   	
   	gd.showDialog()
@@ -53,6 +54,8 @@ def getChannels(subFolder):
 	channelNames = []
 
 	region = gd.getNextString()
+
+	tooSmall = gd.getNextString()
   	
   	channelNames.append([gd.getNextString(), 0])
   	channelNames.append([gd.getNextString(), 1])
@@ -67,7 +70,7 @@ def getChannels(subFolder):
 		print "User canceled dialog!"  
 		return
 		
-  	return region, channels
+  	return region, tooSmall, channels
 
 # Function to get the thresholds.
 
@@ -290,7 +293,7 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
 	for row in info:
-		if row['Animal ID'] == filename[:5]:
+		if row['Animal ID'] == filename.rpartition('-')[0]:
 			for key, value in row.items():
 				summary[key] = value;
 
@@ -301,8 +304,8 @@ def process(subFolder, outputDirectory, filename):
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 
-	summary["organoid-area"] = bigareas[0]
-	fieldnames.append("organoid-area")
+	summary["tissue-area"] = bigareas[0]
+	fieldnames.append("tissue-area")
 	
 	for chan in channels:
   		v, x = chan
@@ -312,13 +315,19 @@ def process(subFolder, outputDirectory, filename):
 	  	summary[v+"-intensity"] = intensities[x]
 	  	fieldnames.append(v+"-intensity")
 
-	  	summary[v+"-blobsarea"] = blobsarea[x]
+	  	summary[v+"-blobsarea"] = blobsarea[x] 
 	  	fieldnames.append(v+"-blobsarea")
+
+		summary[v+"-area/tissue-area"] = blobsarea[x] / bigareas[0]
+		fieldnames.append(v+"-area/tissue-area")
 
 	  	summary[v+"-blobsnuclei"] = blobsnuclei[x]
 	  	fieldnames.append(v+"-blobsnuclei")
 
+		summary[v+"-particles/tissue-area"] = blobsnuclei[x] / bigareas[0]
+		fieldnames.append(v+"-particles/tissue-area")	
 
+		fieldnames.append(v+"-positive/tissue-area")
 	  	
 	# Adds the column for colocalization between first and second marker
   
@@ -385,15 +394,20 @@ def process(subFolder, outputDirectory, filename):
 
 	# Calculate the average of the particles sizes
 
+	for chan in channels:
+  		v, x = chan
+	  	summary[v+"-positive/tissue-area"] = summary[v+"-positive"] / bigareas[0]
+	  	
+
   	if float(summary['#nuclei']) > 0: 
 			summary['size-average'] = round( areaCounter / summary['#nuclei'], 2)
 
 	# Opens and appends one line on the final csv file for the subfolder (remember that this is still inside the loop that goes through each image)
 
-	with open(outputDirectory + "/output.csv", 'a') as csvfile:		
+	with open(outputDirectory + "output_" + time +".csv", 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
-		if os.path.getsize(outputDirectory + "/output.csv") < 1:
+		if os.path.getsize(outputDirectory + "output_" + time +".csv") < 1:
 			writer.writeheader()
 		writer.writerow(summary)
 
@@ -410,9 +424,11 @@ outputDirectory = dc.getDirectory()
 
 # Opens log file
 
+time = datetime.datetime.now().strftime("%Y-%m-%d")
+
 with open(outputDirectory + "log.txt", "w") as log:
 	
-	log.write("log: "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	log.write("log: "+ time)
 	log.write("\n")
 	
 	log.write("________________________\n")
@@ -455,11 +471,12 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 	allChannels = []
 	allRegions = []
+	allSmalls = []
 	for subFolder in directories:
-		region, chan = getChannels(subFolder)
+		region, tooSmall, chan = getChannels(subFolder)
 		allChannels.append(chan)
 		allRegions.append(region)
-
+		allSmalls.append(tooSmall)
 
 	
 	# Loop that goes through each sub folder. 
@@ -468,7 +485,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	log.write("Beginning main directory loop: \n")
 	log.write("\n")
 
-	open(outputDirectory + "/output.csv", 'w').close
+	open(outputDirectory + "output_" + time +".csv", 'w').close
 	
 	for inde, subFolder in enumerate(directories):
 	
@@ -478,15 +495,15 @@ with open(outputDirectory + "log.txt", "w") as log:
 		
 		channels = allChannels[inde]
 		region = allRegions[inde]
-
+		tooSmallThreshold = int(allSmalls[inde])
 	
 		log.write("Channels: "+ str(channels) +"\n")
 		
-		lowerBounds = [200, 200, 205, 205, 205]
+		lowerBounds = [205, 180, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
 			if (v + '-' + region) in thresholds:
-				lowerBounds[x] = int(thresholds[v])
+				lowerBounds[x] = int(thresholds[v + '-' + region])
 	
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
 	
