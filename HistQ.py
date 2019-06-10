@@ -1,5 +1,5 @@
 '''
-		EMCC: Evos Marker Cell Counter 			- ImageJ Macro written in  Python 
+		HistQ: Mouse Histology Cell Quantification 			- ImageJ Macro written in  Python 
 		
 		Input 		- Folders containing split channel images for Organoids
 					- The filenames of the images must end in ch00, ch01, ch02, ch03
