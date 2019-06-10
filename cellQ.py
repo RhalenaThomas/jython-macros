@@ -1,5 +1,5 @@
 '''
-		EMCC: Evos Marker Cell Counter 			- ImageJ Macro written in  Python 
+		CellQ: Evos Cell Quantification 			- ImageJ Macro written in  Python 
 		
 		Input 		- A main directory containing Folders containing split channel images from the EVOS Cell Imaging System
 					- The filenames of the images must be in it's original format, starting with scan_Plate_R and ending with d0, d1, etc.
