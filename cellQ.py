@@ -12,7 +12,7 @@
 '''
 
 
-import os, sys, math, csv, datetime
+import os, sys, math, csv, datetime, random
 from ij import IJ, Prefs
 from ij.io import DirectoryChooser  
 from ij.io import OpenDialog
@@ -24,9 +24,10 @@ from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
 from ij.gui import GenericDialog
 from ij.gui import WaitForUserDialog
+from java.awt import Color
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
-displayImages = False
+displayImages = True
 
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
@@ -133,8 +134,6 @@ def process(subFolder, outputDirectory, filename):
 
 	
 	IJ.setThreshold(imp, lowerBounds[0], 255)
-	if displayImages:
-		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Watershed", "")
 
@@ -147,9 +146,8 @@ def process(subFolder, outputDirectory, filename):
 	pa.setHideOutputImage(True)
 	pa.analyze(imp)
 
-	if not displayImages:
-		imp.changes = False
-		imp.close()
+	imp.changes = False
+	imp.close()
 
 	areas = table.getColumn(0)
 
@@ -182,10 +180,39 @@ def process(subFolder, outputDirectory, filename):
 
 
 		IJ.setThreshold(imp, lowerBounds[x], 255)
-		if displayImages:
-			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
-	
+
+		if displayImages:
+			imp3 = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("R", "M"))
+			imp3.show()
+			imp.show()
+			imp2 = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("d0.TIF", "d" + str(x) + ".TIF"))
+			imp2.show()
+
+			IJ.run(imp, "Enhance Contrast", "saturated=0.35");
+
+			if x == 0:
+				IJ.run(imp2, "Blue", "")
+			if x == 1:
+				IJ.run(imp2, "Green", "")
+			if x == 2:
+				IJ.run(imp2, "Red Hot", "")
+			if x == 3: 
+				IJ.run(imp2, "Red", "")
+
+			ic = ImageConverter(imp2)
+			ic.convertToRGB()
+			imp2.updateAndDraw()
+			
+			for roi in roim.getRoisAsArray():
+		  		imp.setRoi(roi)
+		  		imp2.setColor(Color(255,255,255))
+				roi.drawPixels(imp2.getProcessor())
+				imp2.updateAndDraw()
+			IJ.run("Tile", "");
+			WaitForUserDialog("Title", "Look at image").show()
+			imp2.close()
+			imp3.close()
 	
 		stats = imp.getStatistics(Measurements.AREA_FRACTION)
 		totalAreas.append(stats.areaFraction)
@@ -204,9 +231,8 @@ def process(subFolder, outputDirectory, filename):
 		areaFractionsArray.append(areaFractions)
 		areaMeansArray.append(sum(areaMeans)/len(areaMeans))
 
-		if not displayImages:
-			imp.changes = False
-			imp.close()
+		imp.changes = False
+		imp.close()
 	roim.close()
 	
 	# Figures out what well the image is a part of
