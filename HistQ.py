@@ -214,7 +214,7 @@ def process(subFolder, outputDirectory, filename):
 	# This loop goes through the remaining channels for the other markers, by replacing the ch00 at the end with its corresponding channel
 	# It will save all the area fractions into a 2d array called areaFractionsArray
 	
-	areaFractionsArray = [None] * 5
+	areaFractionsArray = [[]] * 5
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
@@ -231,14 +231,13 @@ def process(subFolder, outputDirectory, filename):
 		imp.updateAndDraw()
 		IJ.run("Threshold...")
 		IJ.setThreshold(20, lowerBounds[0])
-	if displayImages:
-		imp.show()
-		WaitForUserDialog("Title", "Adjust threshold for "+ v +". Current region is: " + region).show()
+		if displayImages:
+			imp.show()
+			WaitForUserDialog("Title", "Adjust threshold for "+ v +". Current region is: " + region).show()
 
 		IJ.run(imp, "Convert to Mask", "")
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
-		areaFractions = []
 		for roi in roim.getRoiManager().getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
