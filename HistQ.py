@@ -31,7 +31,7 @@ from ij.WindowManager import setTempCurrentImage
 MF = MaximumFinder()
 
 # To enable displayxImages mode (such as for testing thresholds), make displayImages = True
-displayImages = False
+displayImages = True
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
@@ -186,7 +186,8 @@ def process(subFolder, outputDirectory, filename):
 	IJ.run("Threshold...")
 	IJ.setThreshold(30, lowerBounds[0])
 	if displayImages:
-		WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
+		imp.show()
+		WaitForUserDialog("Title", "Adjust threshold for nuclei. Current region is: " + region).show()
 	IJ.run(imp, "Convert to Mask", "")
 
 	
@@ -230,8 +231,10 @@ def process(subFolder, outputDirectory, filename):
 		imp.updateAndDraw()
 		IJ.run("Threshold...")
 		IJ.setThreshold(20, lowerBounds[0])
-		if displayImages:
-			WaitForUserDialog("Title", "aDJUST tHRESHOLD aaaaaaaaaaaaa").show()
+	if displayImages:
+		imp.show()
+		WaitForUserDialog("Title", "Adjust threshold for "+ v +". Current region is: " + region).show()
+
 		IJ.run(imp, "Convert to Mask", "")
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
