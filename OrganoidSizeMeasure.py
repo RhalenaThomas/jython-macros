@@ -30,7 +30,7 @@ with open(outputDirectory + "output.csv", "w") as log:
 
 #	for subfolder in subfolders:
 
-	log.write("File Name,Feret,MinFeret,Average Feret,Area,Circularity,Number of Buds\n")
+	log.write("File Name,Feret,MinFeret,Average Feret,Area,Equivalent Circle Diameter,Circularity,Number of Buds\n")
 
 	for filename in os.listdir(inputDirectory): 
 		if filename.endswith(".jpg"):
@@ -68,7 +68,10 @@ with open(outputDirectory + "output.csv", "w") as log:
 			#WaitForUserDialog("Title", "Look").show()
 
 			if maxArea > 0:				
-				log.write(filename + ',' + str(table.getValue("Feret", index)) + ',' + str(table.getValue("MinFeret", index)) + ',' + str((table.getValue("MinFeret", index)+table.getValue("Feret", index))/2) + ','  + str(table.getValue("Area", index)) + ',' + str(table.getValue("Circ.", index)) + ',' + str(len(table.getColumn(0))-1))
+
+				diameter = 2* math.sqrt( float(table.getValue("Area", index)) / (2* math.pi)) 
+				
+				log.write(filename + ',' + str(table.getValue("Feret", index)) + ',' + str(table.getValue("MinFeret", index)) + ',' + str((table.getValue("MinFeret", index)+table.getValue("Feret", index))/2) + ','  + str(table.getValue("Area", index)) + ',' + str(diameter) + ',' + str(table.getValue("Circ.", index)) + ',' + str(len(table.getColumn(0))-1))
 			else:
 				log.write(filename + ',' + 0 + ',' + 0 + ',' + 0 + ',' + 0)
 			
