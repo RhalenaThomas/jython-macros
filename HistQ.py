@@ -346,15 +346,19 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-big-(>'+str(tooBigThreshold)+')'] = 0
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
-	for row in info:
-		if row['Animal ID'] == filename.replace('s', '-').split('-')[0]:
-			for key, value in row.items():
-				summary[key] = value;
 
 	
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
-	fieldnames = ['E', 'PFFs', 'Animal ID', 'Time treatment', 'Treatment', 'Name','Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+	fieldnames = ['Name','Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+
+
+	for row in info:
+		if row['Animal ID'] == filename.replace('s', '-').split('-')[0]:
+			for key, value in row.items():
+				fieldnames.insert(0, key)
+				summary[key] = value;
+
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 
