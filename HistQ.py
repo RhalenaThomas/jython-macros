@@ -30,8 +30,32 @@ from ij.WindowManager import setTempCurrentImage
 
 MF = MaximumFinder()
 
-# To enable displayxImages mode (such as for testing thresholds), make displayImages = True
-displayImages = True
+	# A few default options
+	
+areaFractionThreshold = [0.2, 0.2, 0.2, 0.2, 0.2]		#you can change these
+blur = 2
+maxima = 20
+	
+lowerBounds = [205, 180, 205, 205, 205]
+
+
+
+# display Images checkbox
+
+
+displayImages = False
+
+gd = GenericDialog("Set Threshold Mode")
+gd.addChoice("Would you like to enable thresholding mode?", ["No, run the normal macro", "Yes, enable thresholding mode"], "No")
+gd.showDialog()
+if gd.getNextChoice() == "Yes, enable thresholding mode":
+	displayImages = True
+
+
+
+
+
+
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
@@ -39,15 +63,25 @@ def getChannels(subFolder):
 
 	gd.addStringField("Brain Region:", "")
 
-	gd.addStringField("Minimum size:", "24")
+
+	
 
 	gd.addMessage("Name the markers associated with this directory:")
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
   	gd.addStringField("Channel 1:", "HEMO")
+  	gd.addStringField("Minimum size for Channel 1:", "24")
+	gd.addStringField("Max size for Channel 1:", "500")
+
+	
+	gd.addMessage("")
   	gd.addStringField("Channel 2:", "DAB")
-  	gd.addStringField("Channel 3:", "")
+  	gd.addStringField("Minimum size for Channel 2:", "24")
+	gd.addStringField("Minimum size for Channel 2:", "500")
+ # 	gd.addStringField("Channel 3:", "")
+
+
   	
   	gd.showDialog()
 
@@ -55,11 +89,16 @@ def getChannels(subFolder):
 
 	region = gd.getNextString()
 
-	tooSmall = gd.getNextString()
-  	
-  	channelNames.append([gd.getNextString(), 0])
-  	channelNames.append([gd.getNextString(), 1])
-	channelNames.append([gd.getNextString(), 2])
+
+
+	channelNames.append([gd.getNextString(), 0])
+	tooSmallHEMO = gd.getNextString()
+	tooBigHEMO = gd.getNextString()
+	channelNames.append([gd.getNextString(), 1])
+	tooSmallDAB = gd.getNextString()
+	tooBigDAB = gd.getNextString()
+	
+	#channelNames.append([gd.getNextString(), 2])
 
 	channels = []
 	for i,v in enumerate(channelNames):
@@ -70,7 +109,7 @@ def getChannels(subFolder):
 		print "User canceled dialog!"  
 		return
 		
-  	return region, tooSmall, channels
+  	return region, tooSmallHEMO, tooSmallDAB, tooBigHEMO, tooBigDAB, channels
 
 # Function to get the thresholds.
 
@@ -140,9 +179,9 @@ def process(subFolder, outputDirectory, filename):
 	boundroi = ThresholdToSelection.run(imp)
 	rm.addRoi(boundroi)
 
-	if not displayImages:
-		imp.changes = False
-		imp.close()
+
+	imp.changes = False
+	imp.close()
 
 	images = [None] * 5
 	intensities = [None] * 5
@@ -168,6 +207,9 @@ def process(subFolder, outputDirectory, filename):
 			intensities[x] = stats.mean
 			bigareas[x] = stats.area
 
+		rm.runCommand(imp,"Show None");	
+	
+	
 	rm.close()
 	# Opens the ch00 image and sets default properties
 	
@@ -183,6 +225,8 @@ def process(subFolder, outputDirectory, filename):
 	IJ.run(imp,"Gaussian Blur...","sigma="+str(blur))
 	imp.updateAndDraw()
 	
+	
+	imp.show()
 	IJ.run("Threshold...")
 	IJ.setThreshold(30, lowerBounds[0])
 	if displayImages:
@@ -196,18 +240,15 @@ def process(subFolder, outputDirectory, filename):
 	table = ResultsTable()
 	roim = RoiManager()
 	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 5, 9999999999999999, 0.05, 1.0)
-	
-	
-	
+
 	
 	pa.setHideOutputImage(True)
 	imp = IJ.getImage() 
 	# imp.getProcessor().invert()
 	pa.analyze(imp)
 
-	if not displayImages:
-		imp.changes = False
-		imp.close()
+	imp.changes = False
+	imp.close()
 
 	areas = table.getColumn(0)
 
@@ -215,6 +256,7 @@ def process(subFolder, outputDirectory, filename):
 	# It will save all the area fractions into a 2d array called areaFractionsArray
 	
 	areaFractionsArray = [None] * 5
+	maxThresholds = []
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
@@ -231,12 +273,21 @@ def process(subFolder, outputDirectory, filename):
 		imp.updateAndDraw()
 		IJ.run("Threshold...")
 		IJ.setThreshold(20, lowerBounds[0])
-	if displayImages:
-		imp.show()
-		WaitForUserDialog("Title", "Adjust threshold for "+ v +". Current region is: " + region).show()
+
+		rm.runCommand(imp,"Show None");	
+		rm.runCommand(imp,"Show All");	
+		rm.runCommand(imp,"Show None");	
+		
+		if displayImages:
+			imp.show()
+			IJ.selectWindow(imp.getTitle());
+			WaitForUserDialog("Title", "Adjust threshold for "+ v +". Current region is: " + region).show()
+			ip = imp.getProcessor() 
+			maxThresholds.append(ip.getMaxThreshold())
+
 
 		IJ.run(imp, "Convert to Mask", "")
-	
+
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
 		for roi in roim.getRoiManager().getRoisAsArray():
@@ -245,9 +296,9 @@ def process(subFolder, outputDirectory, filename):
 	  		areaFractions.append(stats.areaFraction)
 	
 		# Saves the results in areaFractionArray
-	  			
+	  	
 		areaFractionsArray[x] = areaFractions
-
+	
 	roim.close()
 
 	
@@ -266,16 +317,16 @@ def process(subFolder, outputDirectory, filename):
 		for roi in roim.getRoiManager().getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA)
-	  		blobs.append(stats.area)
+	  		if stats.area > tooSmallThresholdDAB and stats.area < tooBigThresholdDAB:
+	  			blobs.append(stats.area)
 
 		blobsarea[x] = sum(blobs)
 		blobsnuclei[x] = len(blobs)
 	 
 
 
-		if not displayImages:
-			imp.changes = False
-			imp.close()
+		imp.changes = False
+		imp.close()
 		roim.reset()
 		roim.close()
 
@@ -296,7 +347,7 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
 	for row in info:
-		if row['Animal ID'] == filename.rpartition('-')[0]:
+		if row['Animal ID'] == filename.replace('s', '-').split('-')[0]:
 			for key, value in row.items():
 				summary[key] = value;
 
@@ -356,9 +407,6 @@ def process(subFolder, outputDirectory, filename):
 
 	areaCounter = 0
 	for z, area  in enumerate(areas):
-
-		log.write(str(area))
-		log.write("\n")
 		
 		if area > tooBigThreshold:
 			summary['too-big-(>'+str(tooBigThreshold)+')'] += 1		
@@ -405,12 +453,25 @@ def process(subFolder, outputDirectory, filename):
   	if float(summary['#nuclei']) > 0: 
 			summary['size-average'] = round( areaCounter / summary['#nuclei'], 2)
 
+
+	if displayImages:
+
+		fieldnames = ["Directory", "Image"]
+
+		for chan in channels:
+  			v, x = chan
+		  	summary[v+"-threshold"] = maxThresholds[x]
+  			fieldnames.append(v+"-threshold")
+			allMaxThresholds[v+"-"+region].append(maxThresholds[x])
+
+
 	# Opens and appends one line on the final csv file for the subfolder (remember that this is still inside the loop that goes through each image)
 
-	with open(outputDirectory + "output_" + time +".csv", 'a') as csvfile:		
+
+	with open(outputName, 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
-		if os.path.getsize(outputDirectory + "output_" + time +".csv") < 1:
+		if os.path.getsize(outputName) < 1:
 			writer.writeheader()
 		writer.writerow(summary)
 
@@ -448,19 +509,13 @@ with open(outputDirectory + "log.txt", "w") as log:
 		if os.path.isdir(inputDirectory + subFolder):
 			directories.append(subFolder)
 	
-	# A few default options
-	
-	areaFractionThreshold = [0.2, 0.2, 0.2, 0.2, 0.2]		#you can change these
-	tooSmallThreshold = 24
-	tooBigThreshold = 500
-	blur = 2
-	maxima = 20
+
+
+
 	
 	log.write("________________________\n")
 	log.write("Default calculation thresholds: \n")
 	log.write("	areaFractionThreshold:" + str(areaFractionThreshold) + "\n")
-	log.write("	tooSmallThreshold:" + str(tooSmallThreshold)+"\n")
-	log.write("	tooBigThreshold:" + str(tooBigThreshold)+"\n")
 	
 	# Get options from user. (see functions written on top)
 	
@@ -475,12 +530,17 @@ with open(outputDirectory + "log.txt", "w") as log:
 	allChannels = []
 	allRegions = []
 	allSmalls = []
+	allDAB = []
+	allBigHEMO = []
+	allBigDAB = []
 	for subFolder in directories:
-		region, tooSmall, chan = getChannels(subFolder)
+		region, tooSmallHEMO, tooSmallDAB, tooBigHEMO, tooBigDAB, chan = getChannels(subFolder)
 		allChannels.append(chan)
 		allRegions.append(region)
-		allSmalls.append(tooSmall)
-
+		allSmalls.append(tooSmallHEMO)
+		allDAB.append(tooSmallDAB)
+		allBigHEMO.append(tooBigHEMO)
+		allBigDAB.append(tooBigDAB)
 	
 	# Loop that goes through each sub folder. 
 	
@@ -488,7 +548,24 @@ with open(outputDirectory + "log.txt", "w") as log:
 	log.write("Beginning main directory loop: \n")
 	log.write("\n")
 
-	open(outputDirectory + "output_" + time +".csv", 'w').close
+	if displayImages:
+		allMaxThresholds = {}
+		for regions in allRegions:
+			for channels in allChannels:
+				for chan in channels:
+					v, x = chan
+					allMaxThresholds[v+"-"+regions] = []
+
+
+
+
+	outputName = outputDirectory + "output_" + time +".csv"
+
+	if displayImages:
+		outputName = outputDirectory + "output_thresholds" + time +".csv"
+	
+	
+	open(outputName, 'w').close
 	
 	for inde, subFolder in enumerate(directories):
 	
@@ -499,10 +576,12 @@ with open(outputDirectory + "log.txt", "w") as log:
 		channels = allChannels[inde]
 		region = allRegions[inde]
 		tooSmallThreshold = int(allSmalls[inde])
-	
+		tooSmallThresholdDAB = int(allDAB[inde])
+		tooBigThreshold = int(allBigHEMO[inde])
+		tooBigThresholdDAB = int(allBigDAB[inde])
+		
 		log.write("Channels: "+ str(channels) +"\n")
 		
-		lowerBounds = [205, 180, 205, 205, 205]
 		for chan in channels:
 			v, x = chan
 			if (v + '-' + region) in thresholds:
@@ -518,12 +597,34 @@ with open(outputDirectory + "log.txt", "w") as log:
 
 		
 		for filename in os.listdir(inputDirectory + subFolder): 
-			if filename.endswith(".TIF"):
+			if filename.endswith(".TIF") or filename.endswith(".tif"):
 				log.write("Processing: " + filename +" \n")
 				process(subFolder, outputDirectory, filename);
 		log.write("_________________________\n")
 		log.write("Completed subfolder " + subFolder + ".  \n")
 		log.write("\n")
+
+
+
+
+
+
+	if displayImages:
+
+		maxAverages = {}
+		maxThresholdFieldnames = []
+		
+		for key, value in allMaxThresholds.items():
+			if len(value) > 0:
+				maxAverages[key] = sum(value) / len(value)
+				maxThresholdFieldnames.append(key)
+		
+		with open(outputDirectory + "threshold_file_" + time +".csv", 'a') as csvfile:		
+			writer = csv.DictWriter(csvfile, fieldnames=maxThresholdFieldnames, extrasaction='ignore', lineterminator = '\n')
+			if os.path.getsize(outputDirectory + "threshold_file_" + time +".csv") < 1:
+				writer.writeheader()
+			writer.writerow(maxAverages)
+		
 
 	cat = """
 
