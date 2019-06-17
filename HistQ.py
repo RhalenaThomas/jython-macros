@@ -271,16 +271,22 @@ def process(subFolder, outputDirectory, filename):
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
 		imp.updateAndDraw()
-		IJ.run("Threshold...")
-		IJ.setThreshold(20, lowerBounds[0])
+
 
 		rm.runCommand(imp,"Show None");	
 		rm.runCommand(imp,"Show All");	
 		rm.runCommand(imp,"Show None");	
+
+		
+		imp.show()
+		IJ.selectWindow(imp.getTitle());
+
+		IJ.run("Threshold...")
+		IJ.setThreshold(20, lowerBounds[0])
+
 		
 		if displayImages:
-			imp.show()
-			IJ.selectWindow(imp.getTitle());
+
 			WaitForUserDialog("Title", "Adjust threshold for "+ v +". Current region is: " + region).show()
 			ip = imp.getProcessor() 
 			maxThresholds.append(ip.getMaxThreshold())
