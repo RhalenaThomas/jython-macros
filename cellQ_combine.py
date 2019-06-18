@@ -8,8 +8,6 @@ outputName = "combined.csv"
 
 fields = ["Ch1, Ch2, Ch3"]
 
-d1,d2,d3 = "zzz"
-
 channels = {}
 
 files = os.listdir(directory)
@@ -19,6 +17,8 @@ for filename in files:
 		with open(directory + '/' + filename) as csvfile:
 			reader = csv.DictReader(csvfile)
 			for i, name in enumerate(reader.fieldnames):
+
+				d1,d2,d3 = "zzz"
 
 				if i == 17:
 					d1 = name.replace("-positive", "")
@@ -38,15 +38,18 @@ for filename in files:
 
 
 with open(directory + '/' + outputName, 'w') as csvfile:		
-	writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction='ignore', lineterminator = '\n')
-	writer.writeheader()
+	writer = csv.writer(csvfile)
+	writer.writerow(fields)
 	for filename in files:
 		if "output" in filename:
 			with open(directory + '/' + filename) as csvfile:
-				reader = csv.DictReader(csvfile)
+				reader = csv.reader(csvfile)
+
 				for row in reader:
-					row["Ch1"] = channels[filename][0]
-					row["Ch2"] = channels[filename][1]
-					row["Ch3"] = channels[filename][2]
+
+					row.insert(0,channels[filename][0])
+					row.insert(1,channels[filename][1])
+					row.insert(2,channels[filename][2])
+
 					writer.writerow(row)
 
