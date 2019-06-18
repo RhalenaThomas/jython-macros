@@ -32,7 +32,7 @@ MF = MaximumFinder()
 
 	# A few default options
 	
-areaFractionThreshold = [0.2, 0.2, 0.2, 0.2, 0.2]		#you can change these
+areaFractionThreshold = [85, 85, 85, 85, 85]		#you can change these
 blur = 2
 maxima = 20
 	
@@ -71,13 +71,13 @@ def getChannels(subFolder):
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
   	gd.addStringField("Channel 1:", "HEMO")
-  	gd.addStringField("Minimum size for Channel 1:", "24")
+  	gd.addStringField("Minimum size for Channel 1:", "20")
 	gd.addStringField("Max size for Channel 1:", "500")
 
 	
 	gd.addMessage("")
   	gd.addStringField("Channel 2:", "DAB")
-  	gd.addStringField("Minimum size for Channel 2:", "24")
+  	gd.addStringField("Minimum size for Channel 2:", "30")
 	gd.addStringField("Minimum size for Channel 2:", "500")
  # 	gd.addStringField("Channel 3:", "")
 
@@ -187,6 +187,7 @@ def process(subFolder, outputDirectory, filename):
 	intensities = [None] * 5
 	blobsarea = [None] * 5
 	blobsnuclei = [None] * 5
+	cells = [None] * 5
 	bigareas = [None] * 5
 
 	IJ.run(dup, "Colour Deconvolution", "vectors=[H DAB]")
@@ -282,7 +283,7 @@ def process(subFolder, outputDirectory, filename):
 		IJ.selectWindow(imp.getTitle());
 
 		IJ.run("Threshold...")
-		IJ.setThreshold(20, lowerBounds[0])
+		IJ.setThreshold(20, lowerBounds[x])
 
 		
 		if displayImages:
@@ -320,18 +321,22 @@ def process(subFolder, outputDirectory, filename):
 		pa.analyze(imp)
 		
 		blobs = []
+		cell = []
 		for roi in roim.getRoiManager().getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA)
+	  		blobs.append(stats.area)
 	  		if stats.area > tooSmallThresholdDAB and stats.area < tooBigThresholdDAB:
-	  			blobs.append(stats.area)
+	  			cell.append(stats.area)
 
 		blobsarea[x] = sum(blobs)
 		blobsnuclei[x] = len(blobs)
+	 	
 	 
-
-
+	 
+	 	cells[x] = len(cell)
 		imp.changes = False
+		
 		imp.close()
 		roim.reset()
 		roim.close()
@@ -373,25 +378,29 @@ def process(subFolder, outputDirectory, filename):
 	
 	for chan in channels:
   		v, x = chan
-	  	summary[v+"-positive"] = 0
-	  	fieldnames.append(v+"-positive")
+	  	summary[v+"-HEMO-cells"] = 0
+	  	fieldnames.append(v+"-HEMO-cells")
 	  	
 	  	summary[v+"-intensity"] = intensities[x]
 	  	fieldnames.append(v+"-intensity")
 
-	  	summary[v+"-blobsarea"] = blobsarea[x] 
-	  	fieldnames.append(v+"-blobsarea")
+	  	summary[v+"-area"] = blobsarea[x] 
+	  	fieldnames.append(v+"-area")
 
 		summary[v+"-area/tissue-area"] = blobsarea[x] / bigareas[0]
 		fieldnames.append(v+"-area/tissue-area")
 
-	  	summary[v+"-blobsnuclei"] = blobsnuclei[x]
-	  	fieldnames.append(v+"-blobsnuclei")
+	  	summary[v+"-particles"] = blobsnuclei[x]
+	  	fieldnames.append(v+"-particles")
+
+	  	summary[v+"-cells"] = cells[x]
+	  	fieldnames.append(v+"-cells")
+
 
 		summary[v+"-particles/tissue-area"] = blobsnuclei[x] / bigareas[0]
 		fieldnames.append(v+"-particles/tissue-area")	
 
-		fieldnames.append(v+"-positive/tissue-area")
+		fieldnames.append(v+"-HEMO-Cells/tissue-area")
 	  	
 	# Adds the column for colocalization between first and second marker
   
@@ -431,7 +440,7 @@ def process(subFolder, outputDirectory, filename):
 			for chan in channels:
 				v, x = chan
 				if areaFractionsArray[x][z] > areaFractionThreshold[0]:				
-					summary[chan[0]+'-positive'] += 1
+					summary[chan[0]+'-HEMO-cells'] += 1
 					if x != 0:
 						temp += 1
 
@@ -457,7 +466,7 @@ def process(subFolder, outputDirectory, filename):
 
 	for chan in channels:
   		v, x = chan
-	  	summary[v+"-positive/tissue-area"] = summary[v+"-positive"] / bigareas[0]
+	  	summary[v+"-HEMO-Cells/tissue-area"] = summary[v+"-HEMO-cells"] / bigareas[0]
 	  	
 
   	if float(summary['#nuclei']) > 0: 
@@ -595,7 +604,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 		for chan in channels:
 			v, x = chan
 			if (v + '-' + region) in thresholds:
-				lowerBounds[x] = int(thresholds[v + '-' + region])
+				lowerBounds[x] = int(round(float(thresholds[v + '-' + region])))
 	
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
 	
