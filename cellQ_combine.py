@@ -6,9 +6,11 @@ directory = tkFileDialog.askdirectory(parent=root,initialdir="/",title='Please s
 outputName = "combined.csv"
 
 
-fields = []
+fields = ["Ch1, Ch2, Ch3"]
 
 d1,d2,d3 = "zzz"
+
+channels = {}
 
 files = os.listdir(directory)
 
@@ -32,6 +34,8 @@ for filename in files:
 				if name not in fields:
 					fields.append(name)
 
+		channels[filename] = [d1, d2, d3]
+
 
 with open(directory + '/' + outputName, 'w') as csvfile:		
 	writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction='ignore', lineterminator = '\n')
@@ -41,5 +45,8 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 			with open(directory + '/' + filename) as csvfile:
 				reader = csv.DictReader(csvfile)
 				for row in reader:
+					row["Ch1"] = channels[filename][0]
+					row["Ch2"] = channels[filename][1]
+					row["Ch3"] = channels[filename][2]
 					writer.writerow(row)
 
