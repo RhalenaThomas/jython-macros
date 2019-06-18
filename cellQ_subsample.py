@@ -1,5 +1,9 @@
 import sys, os, Tkinter, tkFileDialog, tkSimpleDialog, csv, random
 
+
+seed = 42
+
+
 root = Tkinter.Tk()
 path = tkFileDialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
 
@@ -16,7 +20,7 @@ with open(path) as csvfile:
 		data.append(row)
 	fields = reader.fieldnames
 
-random.shuffle(data)
+random.Random(seed).shuffle(data)
 
 with open(path.replace(".csv", "_" + outputName + ".csv"), 'w') as csvfile:		
 	writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction='ignore', lineterminator = '\n')
