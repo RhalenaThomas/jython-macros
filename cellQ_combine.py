@@ -6,9 +6,11 @@ directory = tkFileDialog.askdirectory(parent=root,initialdir="/",title='Please s
 outputName = "combined.csv"
 
 
-fields = ["Ch1, Ch2, Ch3"]
+fields = ["Ch1", "Ch2", "Ch3"]
 
 channels = {}
+
+d1,d2,d3 = "zzz"
 
 files = os.listdir(directory)
 
@@ -18,13 +20,11 @@ for filename in files:
 			reader = csv.DictReader(csvfile)
 			for i, name in enumerate(reader.fieldnames):
 
-				d1,d2,d3 = "zzz"
-
 				if i == 17:
 					d1 = name.replace("-positive", "")
 				if i == 22:
 					d2 = name.replace("-positive", "")
-				if i == 26:
+				if i == 27:
 					d3 = name.replace("-positive", "")
 
 				name = name.replace(d1, "Ch1")
@@ -45,11 +45,12 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 			with open(directory + '/' + filename) as csvfile:
 				reader = csv.reader(csvfile)
 
-				for row in reader:
+				for i, row in enumerate(reader):
 
-					row.insert(0,channels[filename][0])
-					row.insert(1,channels[filename][1])
-					row.insert(2,channels[filename][2])
+					if i != 0:
+						row.insert(0,channels[filename][0])
+						row.insert(1,channels[filename][1])
+						row.insert(2,channels[filename][2])
 
-					writer.writerow(row)
+						writer.writerow(row)
 
