@@ -68,22 +68,23 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 							row.append(row[j] + "_per_nuclei")
 
 					else:
-						
-						for j in range(6, len(fields)-1):
-							row.append(row[j]/row[10])
+						if row[7] == "False":
 
-						row.insert(0, channels[filename][0])
-						row.insert(1, channels[filename][1])
-						row.insert(2, channels[filename][2])
-						row.insert(3, channels[filename][3])
-						
-						line = int(row[9])
+							for j in range(6, len(fields)-1):
+								row.append(row[j]/row[10])
 
-						row.insert(4, growths[m][line-1])
-						row.insert(5, viabilities[m][line-1])
-						row.insert(6, differentiations[m][line-1])
-						row.insert(7, attachments[m][line-1])
-						row.insert(8, scores[m][line-1])
+							row.insert(0, channels[filename][0])
+							row.insert(1, channels[filename][1])
+							row.insert(2, channels[filename][2])
+							row.insert(3, channels[filename][3])
+							
+							line = int(row[9])
 
-						writer.writerow(row)
+							row.insert(4, growths[m][line-1])
+							row.insert(5, viabilities[m][line-1])
+							row.insert(6, differentiations[m][line-1])
+							row.insert(7, attachments[m][line-1])
+							row.insert(8, scores[m][line-1])
+
+							writer.writerow(row)
 
