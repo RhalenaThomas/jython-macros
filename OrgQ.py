@@ -94,13 +94,46 @@ def getThresholds():
 def process(subFolder, outputDirectory, filename):
 
 
+	imp = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("_ch00.tif",".tif"))
+	imp.show()
+	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
+	ic = ImageConverter(imp);
+	ic.convertToGray8();
+	imp.updateAndDraw()
+	IJ.run("Threshold...")
+	IJ.setThreshold(2, 255)
+	IJ.run(imp, "Convert to Mask", "")
+	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Dark")
+	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Bright")
+	
+	imp.getProcessor().invert()
+	rm = RoiManager()
+	imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
+	boundroi = ThresholdToSelection.run(imp)
+	rm.addRoi(boundroi)
+
+	if not displayImages:
+		imp.changes = False
+		imp.close()
+
 	images = [None] * 5
 	intensities = [None] * 5
 	blobsarea = [None] * 5
 	blobsnuclei = [None] * 5
 	areas = [None] * 5
 
+	
+	for chan in channels:
+		v, x = chan
+		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
+		imp = images[x]
+		for roi in rm.getRoiManager().getRoisAsArray():
+			imp.setRoi(roi)
+			stats = imp.getStatistics(Measurements.MEAN | Measurements.AREA)
+			intensities[x] = stats.mean
+			areas[x] = stats.area
 
+	rm.close()
 	# Opens the ch00 image and sets default properties
 	
 	imp = IJ.openImage(inputDirectory + subFolder + '/' + filename)
@@ -145,9 +178,7 @@ def process(subFolder, outputDirectory, filename):
 	for chan in channels:
 		v, x = chan
 		# Opens each image and thresholds
-		new = "ch0" + str(x) + ".tif"
-		nametemp = new.join(filename.rsplit("ch00.tif", 1))
-		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  nametemp) 
+		
 		imp = images[x]
 		IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 
@@ -171,7 +202,7 @@ def process(subFolder, outputDirectory, filename):
 		# Saves the results in areaFractionArray
 	  			
 		areaFractionsArray[x] = areaFractions
-	roim.reset()
+
 	roim.close()
 
 	
@@ -224,6 +255,9 @@ def process(subFolder, outputDirectory, filename):
 	fieldnames = ['Name','Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
+
+	summary["organoid-area"] = areas[x]
+	fieldnames.append("organoid-area")
 	
 	for chan in channels:
   		v, x = chan
@@ -352,9 +386,9 @@ with open(outputDirectory + "log.txt", "w") as log:
 	
 	# A few default options
 	
-	areaFractionThreshold = [0.7, 0.2, 0.7, 0.2, 0.2]		#you can change these
+	areaFractionThreshold = [0.1, 0.1, 0.1, 0.1, 0.1]		#you can change these
 	tooSmallThreshold = 50
-	tooBigThreshold = 700
+	tooBigThreshold = 500
 	blur = 2
 	maxima = 20
 	
