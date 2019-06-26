@@ -120,7 +120,7 @@ def process(subFolder, outputDirectory, filename):
 	intensities = [None] * 5
 	blobsarea = [None] * 5
 	blobsnuclei = [None] * 5
-	areas = [None] * 5
+	bigAreas = [None] * 5
 
 	
 	for chan in channels:
@@ -131,7 +131,7 @@ def process(subFolder, outputDirectory, filename):
 			imp.setRoi(roi)
 			stats = imp.getStatistics(Measurements.MEAN | Measurements.AREA)
 			intensities[x] = stats.mean
-			areas[x] = stats.area
+			bigAreas[x] = stats.area
 
 	rm.close()
 	# Opens the ch00 image and sets default properties
@@ -256,7 +256,7 @@ def process(subFolder, outputDirectory, filename):
 
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 
-	summary["organoid-area"] = areas[x]
+	summary["organoid-area"] = bigAreas[x]
 	fieldnames.append("organoid-area")
 	
 	for chan in channels:
