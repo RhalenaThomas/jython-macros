@@ -1,5 +1,5 @@
 '''
-		EMCC: Evos Marker Cell Counter 			- ImageJ Macro written in  Python 
+		OrgQ		- ImageJ Macro written in  Python 
 		
 		Input 		- Folders containing split channel images for Organoids
 					- The filenames of the images must end in ch00, ch01, ch02, ch03
@@ -25,6 +25,11 @@ from ij.gui import GenericDialog
 from ij.gui import WaitForUserDialog
 from ij.plugin.filter import MaximumFinder
 from ij.plugin.filter import ThresholdToSelection
+from ij.WindowManager import getImage
+from ij.WindowManager import setTempCurrentImage
+
+
+
 MF = MaximumFinder()
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
@@ -95,19 +100,16 @@ def process(subFolder, outputDirectory, filename):
 
 
 	imp = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("_ch00.tif",".tif"))
-	imp.show()
 	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
-	imp.updateAndDraw()
-	IJ.run("Threshold...")
-	IJ.setThreshold(2, 255)
+	IJ.setThreshold(imp, 2, 255)
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Dark")
 	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Bright")
 	
 	imp.getProcessor().invert()
-	rm = RoiManager()
+	rm = RoiManager(True)
 	imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
 	boundroi = ThresholdToSelection.run(imp)
 	rm.addRoi(boundroi)
@@ -127,7 +129,7 @@ def process(subFolder, outputDirectory, filename):
 		v, x = chan
 		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
 		imp = images[x]
-		for roi in rm.getRoiManager().getRoisAsArray():
+		for roi in rm.getRoisAsArray():
 			imp.setRoi(roi)
 			stats = imp.getStatistics(Measurements.MEAN | Measurements.AREA)
 			intensities[x] = stats.mean
@@ -141,16 +143,26 @@ def process(subFolder, outputDirectory, filename):
 	
 	# Sets the threshold and watersheds. for more details on image processing, see https://imagej.nih.gov/ij/developer/api/ij/process/ImageProcessor.html 
 
-	imp.show()
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
-	imp.updateAndDraw()
 	
 	IJ.run(imp, "Remove Outliers...", "radius=2" + " threshold=50" + " which=Dark")
+
 	
 	IJ.run(imp,"Gaussian Blur...","sigma="+str(blur))
+	
+	#IJ.setThreshold(imp, lowerBounds[0], 255)
+	#IJ.run(imp, "Convert to Mask", "")
+	#IJ.run(imp, "Watershed", "")
+
+	
 	maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
-	ImagePlus("Found maxima", maximp).show()
+	impM = ImagePlus("Found maxima", maximp)
+
+	#impM.show()
+
+	#WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+	
 	if not displayImages:
 		imp.changes = False
 		imp.close()
@@ -158,10 +170,11 @@ def process(subFolder, outputDirectory, filename):
 	# Counts and measures the area of particles and adds them to a table called areas. Also adds them to the ROI manager
 
 	table = ResultsTable()
-	roim = RoiManager()
+	roim = RoiManager(True)
+	ParticleAnalyzer.setRoiManager(roim); 
 	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
 	pa.setHideOutputImage(True)
-	imp = IJ.getImage() 
+	imp = impM
 	# imp.getProcessor().invert()
 	pa.analyze(imp)
 
@@ -182,19 +195,16 @@ def process(subFolder, outputDirectory, filename):
 		imp = images[x]
 		IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 
-		imp.show()
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
-		imp.updateAndDraw()
-		IJ.run("Threshold...")
-		IJ.setThreshold(lowerBounds[x], 255)
+		IJ.setThreshold(imp, lowerBounds[x], 255)
 		if displayImages:
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
-		for roi in roim.getRoiManager().getRoisAsArray():
+		for roi in roim.getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
 	  		areaFractions.append(stats.areaFraction)
@@ -211,13 +221,13 @@ def process(subFolder, outputDirectory, filename):
 		
 		imp = images[x]
 		imp.deleteRoi()
-		imp.updateAndDraw()
-		roim = RoiManager()
+		roim = RoiManager(True)
+		ParticleAnalyzer.setRoiManager(roim); 
 		pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
 		pa.analyze(imp)
 		
 		blobs = []
-		for roi in roim.getRoiManager().getRoisAsArray():
+		for roi in roim.getRoisAsArray():
 	  		imp.setRoi(roi)
 	  		stats = imp.getStatistics(Measurements.AREA)
 	  		blobs.append(stats.area)
@@ -389,7 +399,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	areaFractionThreshold = [0.1, 0.1, 0.1, 0.1, 0.1]		#you can change these
 	tooSmallThreshold = 50
 	tooBigThreshold = 500
-	blur = 2
+	blur = 1
 	maxima = 20
 	
 	log.write("________________________\n")

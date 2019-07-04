@@ -132,10 +132,12 @@ def process(subDir, subsubDir, outputDirectory, filename):
 	blurry = (stats.mean < 18 and stats.stdDev < 22) or  stats.max < 250
 
 	IJ.setThreshold(imp, lowerBounds[0], 255)
-	if displayImages:
-		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Watershed", "")
+	if displayImages:
+		imp.show()
+		WaitForUserDialog("Title", "Look at image").show()
 
 	# Counts and measures the area of particles and adds them to a table called areas. Also adds them to the ROI manager
 
@@ -180,9 +182,11 @@ def process(subDir, subsubDir, outputDirectory, filename):
 
 
 		IJ.setThreshold(imp, lowerBounds[x], 255)
-		if displayImages:
-			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
+		
+		if displayImages:
+			imp.show()
+			WaitForUserDialog("Title", "Look at image").show()
 	
 	
 		stats = imp.getStatistics(Measurements.AREA_FRACTION)

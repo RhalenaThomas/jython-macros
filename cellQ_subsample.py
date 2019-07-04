@@ -31,7 +31,7 @@ with open(path.replace(".csv", "_" + outputName + ".csv"), 'w') as csvfile:
 		writer2.writeheader()
 
 		for i in range(len(data)):
-			if i < len(data)*0.6:
+			if i < len(data)*0.5:
 				writer.writerow(data[i])
 			else:
 				writer2.writerow(data[i])
