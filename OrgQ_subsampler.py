@@ -133,7 +133,7 @@ def process(subFolder, outputDirectory, filename):
 			IJ.run("Crop")
 			l = l+1
 			copy.show()
-			FileSaver(copy).saveAsTiff(outputDirectory + '/' + "_crop_" + str(l) + ".tif")  
+			FileSaver(copy).saveAsTiff(outputDirectory + '/' +  filename + "_crop_" + str(l) + ".tif")  
 			copy.changes = False
 			copy.close()
 
@@ -143,7 +143,7 @@ def process(subFolder, outputDirectory, filename):
 				image.show()
 				IJ.makeRectangle(Xposition, Yposition, 1000, 1000)
 				IJ.run("Crop")
-				FileSaver(image).saveAsTiff(outputDirectory + '/'  + filename + "_crop_" + str(l) + "ch0" + str(x) + ".tif")  
+				FileSaver(image).saveAsTiff(outputDirectory + '/'  + filename + "_crop_" + str(l) + "_ch0" + str(x) + ".tif")  
 				image.changes = False
 				image.close()
 		else:
