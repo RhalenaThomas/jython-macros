@@ -93,13 +93,15 @@ def getThresholds():
 				thresholds = row
 	return thresholds
 
-
+def rreplace(s, old, new):
+    return (s[::-1].replace(old[::-1],new[::-1], 1))[::-1]
+    
 ############# Main loop, will run for every image. ##############
 
 def process(subFolder, outputDirectory, filename):
 
 
-	imp = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("_ch00.tif",".tif"))
+	imp = IJ.openImage(inputDirectory + subFolder + '/' +  rreplace(filename,"_ch00.tif",".tif"))
 	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
@@ -127,7 +129,7 @@ def process(subFolder, outputDirectory, filename):
 	
 	for chan in channels:
 		v, x = chan
-		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
+		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  rreplace(filename,"_ch00.tif",".tif")) 
 		imp = images[x]
 		for roi in rm.getRoisAsArray():
 			imp.setRoi(roi)
