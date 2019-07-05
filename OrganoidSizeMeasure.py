@@ -45,10 +45,12 @@ with open(outputDirectory + "output.csv", "w") as log:
 		
 	
 		for filename in os.listdir(inputDirectory): 
-			if filename.endswith(".TIF"):
+			if filename.endswith(".TIF"):      # add file name thing here eg if 4x.TIF
 				imp = IJ.openImage(inputDirectory + '/' + filename)	
+				# 10X objective
 				IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
-		
+				# 4X objective 
+				# IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 				ic = ImageConverter(imp);
 				ic.convertToGray8();
 				IJ.setAutoThreshold(imp, "Default dark")
