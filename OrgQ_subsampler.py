@@ -1,3 +1,4 @@
+
 '''
 		EMCC: Evos Marker Cell Counter 			- ImageJ Macro written in  Python 
 		
@@ -112,47 +113,50 @@ def process(subFolder, outputDirectory, filename):
 	
 	imp.getProcessor().invert()
 
+	imp.show()
+	
+	WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+
 	l = 0
 	k = 0
-	while l < 10:
-		roim = RoiManager()
-		imp.show()
-		copy = imp.duplicate()  
-		copy.show()
-		Xposition = (int)(random.random()*imp.width - 1000)
-		Yposition = (int)(random.random()*imp.height - 1000)
-		IJ.makeRectangle(Xposition, Yposition, 1000, 1000)
-		roi1 = copy.getRoi()
-		copy.setRoi(roi1)
-		roim.addRoi(roi1)
-		for roi in roim.getRoiManager().getRoisAsArray():
-	  		copy.setRoi(roi)
-	  		stats = copy.getStatistics(Measurements.MEAN)
-		if stats.mean < 128:
+	while l < 5:
+		while k < 5:
+			roim = RoiManager()
+			imp.show()
+			copy = imp.duplicate()  
 			copy.show()
-			IJ.run("Crop")
-			l = l+1
-			copy.show()
-			FileSaver(copy).saveAsTiff(outputDirectory + '/' +  filename + "_crop_" + str(l) + ".tif")  
-			copy.changes = False
-			copy.close()
-
-			for chan in channels:
-				v, x = chan
-				image = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
-				image.show()
-				IJ.makeRectangle(Xposition, Yposition, 1000, 1000)
+			Xposition = (int)(round(imp.width/5*l))
+			Yposition = (int)(round(imp.width/5*k))
+			IJ.makeRectangle(Xposition, Yposition, (int)round(imp.width/5) - 1, (int)round(imp.width/5) - 1)
+			roi1 = copy.getRoi()
+			copy.setRoi(roi1)
+			roim.addRoi(roi1)
+			for roi in roim.getRoiManager().getRoisAsArray():
+		  		copy.setRoi(roi)
+		  		stats = copy.getStatistics(Measurements.MEAN)
+			if stats.mean < 128:
+				copy.show()
 				IJ.run("Crop")
-				FileSaver(image).saveAsTiff(outputDirectory + '/'  + filename + "_crop_" + str(l) + "_ch0" + str(x) + ".tif")  
-				image.changes = False
-				image.close()
-		else:
-			k = k+1
-			copy.changes = False
-			copy.close()
-		roim.close()
-
-
+				copy.show()
+				FileSaver(copy).saveAsTiff(outputDirectory + '/' +  filename + "_crop_" + str(l) + ".tif")  
+				copy.changes = False
+				copy.close()
+	
+				for chan in channels:
+					v, x = chan
+					image = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
+					image.show()
+					IJ.makeRectangle(Xposition, Yposition, 1000, 1000)
+					IJ.run("Crop")
+					FileSaver(image).saveAsTiff(outputDirectory + '/'  + filename + "_crop_" + str(l) + "_ch0" + str(x) + ".tif")  
+					image.changes = False
+					image.close()
+			else:
+				copy.changes = False
+				copy.close()
+			roim.close()
+			k = k + 1
+		l = l + 1
 		
 	imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
 	boundroi = ThresholdToSelection.run(imp)
