@@ -25,6 +25,7 @@ from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
 from ij.gui import GenericDialog
 from ij.gui import WaitForUserDialog
+from ij.gui import Roi
 from ij.plugin.filter import MaximumFinder
 from ij.plugin.filter import ThresholdToSelection
 MF = MaximumFinder()
@@ -100,62 +101,53 @@ def process(subFolder, outputDirectory, filename):
 	roim.close()
 	
 	imp = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("_ch00.tif",".tif"))
-	imp.show()
 	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 	ic = ImageConverter(imp);
 	ic.convertToGray8();
 	imp.updateAndDraw()
-	IJ.run("Threshold...")
-	IJ.setThreshold(2, 255)
+	IJ.setThreshold(imp, 2, 255)
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Dark")
 	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Bright")
 	
 	imp.getProcessor().invert()
 
-	imp.show()
 	
-	WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+
+	x_amount = 3
+	y_amount = 3
+
 
 	l = 0
-	k = 0
-	while l < 5:
-		while k < 5:
-			roim = RoiManager()
-			imp.show()
+	j = 0
+	while l < x_amount:
+		k = 0
+		while k < y_amount:
 			copy = imp.duplicate()  
-			copy.show()
-			Xposition = (int)(round(imp.width/5*l))
-			Yposition = (int)(round(imp.width/5*k))
-			IJ.makeRectangle(Xposition, Yposition, (int)round(imp.width/5) - 1, (int)round(imp.width/5) - 1)
-			roi1 = copy.getRoi()
-			copy.setRoi(roi1)
-			roim.addRoi(roi1)
-			for roi in roim.getRoiManager().getRoisAsArray():
-		  		copy.setRoi(roi)
-		  		stats = copy.getStatistics(Measurements.MEAN)
-			if stats.mean < 128:
-				copy.show()
-				IJ.run("Crop")
-				copy.show()
-				FileSaver(copy).saveAsTiff(outputDirectory + '/' +  filename + "_crop_" + str(l) + ".tif")  
-				copy.changes = False
-				copy.close()
+			Xposition = (int)(round((imp.width/x_amount)*l))
+			Yposition = (int)(round((imp.width/y_amount)*k))
+			Width = (int)(round(imp.width/x_amount))
+			Height = (int)(round(imp.height/y_amount))
+			roi = Roi(Xposition, Yposition, Width, Height)
+			copy.setRoi(roi)
+			IJ.run(copy, "Crop", "");
+			FileSaver(copy).saveAsTiff(outputDirectory + '/' +  filename + "_crop_" + str(j) + ".tif")  
+			copy.changes = False
+			copy.close()
 	
-				for chan in channels:
-					v, x = chan
-					image = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
-					image.show()
-					IJ.makeRectangle(Xposition, Yposition, 1000, 1000)
-					IJ.run("Crop")
-					FileSaver(image).saveAsTiff(outputDirectory + '/'  + filename + "_crop_" + str(l) + "_ch0" + str(x) + ".tif")  
-					image.changes = False
-					image.close()
-			else:
-				copy.changes = False
-				copy.close()
+			for chan in channels:
+				v, x = chan
+				image = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("ch00.tif", "ch0" + str(x) + ".tif")) 
+				roi = Roi(Xposition, Yposition, Width, Height)
+				image.setRoi(roi)
+				IJ.run(image, "Crop", "");
+				FileSaver(image).saveAsTiff(outputDirectory + '/'  + filename + "_crop_" + str(j) + "_ch0" + str(x) + ".tif")  
+				image.changes = False
+				image.close()
+
 			roim.close()
 			k = k + 1
+			j = j + 1
 		l = l + 1
 		
 	imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
