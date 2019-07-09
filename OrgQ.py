@@ -38,39 +38,39 @@ displayImages = False
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
-  	gd = GenericDialog("Channel Options")  
+	gd = GenericDialog("Channel Options")  
 
 	gd.addMessage("Name the markers associated with this directory:")
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
-  	gd.addStringField("Channel ch00:", "Dapi")
-  	gd.addStringField("Channel ch01:", "pSYN")
-  	gd.addStringField("Channel ch02:", "MAP2")
-  	gd.addStringField("Channel ch03:", "SYN")
-  	gd.addMessage("")
+	gd.addStringField("Channel ch00:", "Dapi")
+	gd.addStringField("Channel ch01:", "pSYN")
+	gd.addStringField("Channel ch02:", "MAP2")
+	gd.addStringField("Channel ch03:", "SYN")
+	gd.addMessage("")
 	gd.addStringField("What would you like the output file to be named:", "output")
-  	
-  	gd.showDialog()
+	
+	gd.showDialog()
 
 	channelNames = []
-  	
-  	channelNames.append([gd.getNextString(), 0])
-  	channelNames.append([gd.getNextString(), 1])
+	
+	channelNames.append([gd.getNextString(), 0])
+	channelNames.append([gd.getNextString(), 1])
 	channelNames.append([gd.getNextString(), 2])
 	channelNames.append([gd.getNextString(), 3])
-  	outputName = gd.getNextString()
+	outputName = gd.getNextString()
 
 	channels = []
 	for i,v in enumerate(channelNames):
 		if v[0] != "":
 			channels.append(v)
 
-  	if gd.wasCanceled():  
+	if gd.wasCanceled():  
 		print "User canceled dialog!"  
 		return
 		
-  	return channels, outputName
+	return channels, outputName
 
 # Function to get the thresholds.
 
@@ -111,6 +111,16 @@ def process(subFolder, outputDirectory, filename):
 	IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Bright")
 	
 	imp.getProcessor().invert()
+
+
+
+
+
+
+
+
+
+
 	rm = RoiManager(True)
 	imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
 	boundroi = ThresholdToSelection.run(imp)
@@ -122,9 +132,10 @@ def process(subFolder, outputDirectory, filename):
 
 	images = [None] * 5
 	intensities = [None] * 5
-	blobsarea = [None] * 5
-	blobsnuclei = [None] * 5
+	blobsarea = [0] * 5
+	blobsnuclei = [0] * 5
 	bigAreas = [None] * 5
+	areas = []
 
 	
 	for chan in channels:
@@ -157,98 +168,157 @@ def process(subFolder, outputDirectory, filename):
 	#IJ.run(imp, "Convert to Mask", "")
 	#IJ.run(imp, "Watershed", "")
 
+
+
+	x_amount = 3
+	y_amount = 3
+
+
+	l = 0
+	j = 0
+
+	allImages = {}
 	
-	maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
-	impM = ImagePlus("Found maxima", maximp)
+	while l < x_amount:
+		k = 0
 
-	#impM.show()
-
-	#WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
-	
-	if not displayImages:
-		imp.changes = False
-		imp.close()
-
-	# Counts and measures the area of particles and adds them to a table called areas. Also adds them to the ROI manager
-
-	table = ResultsTable()
-	roim = RoiManager(True)
-	ParticleAnalyzer.setRoiManager(roim); 
-	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
-	pa.setHideOutputImage(True)
-	imp = impM
-	# imp.getProcessor().invert()
-	pa.analyze(imp)
-
-	if not displayImages:
-		imp.changes = False
-		imp.close()
-
-	areas = table.getColumn(0)
-
-	# This loop goes through the remaining channels for the other markers, by replacing the ch00 at the end with its corresponding channel
-	# It will save all the area fractions into a 2d array called areaFractionsArray
-	
-	areaFractionsArray = [None] * 5
-	for chan in channels:
-		v, x = chan
-		# Opens each image and thresholds
+		yImages = {}
 		
-		imp = images[x]
-		IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
+		while k < y_amount:
 
-		ic = ImageConverter(imp);
-		ic.convertToGray8();
-		IJ.setThreshold(imp, lowerBounds[x], 255)
-		if displayImages:
-			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
-		IJ.run(imp, "Convert to Mask", "")
+			imageSet = {}
+			copy = imp.duplicate()  
+			Xposition = (int)(round((imp.width/x_amount)*l))
+			Yposition = (int)(round((imp.width/y_amount)*k))
+			Width = (int)(round(imp.width/x_amount))
+			Height = (int)(round(imp.height/y_amount))
+			roi = Roi(Xposition, Yposition, Width, Height)
+			copy.setRoi(roi)
+			IJ.run(copy, "Crop", "");
+			imageSet['Nuc'] = copy
+			copy.changes = False
+			copy.close()
+
+
 	
-		# Measures the area fraction of the new image for each ROI from the ROI manager.
-		areaFractions = []
-		for roi in roim.getRoisAsArray():
-	  		imp.setRoi(roi)
-	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
-	  		areaFractions.append(stats.areaFraction)
+			for chan in channels:
+				v, x = chan
+				image = images[x]
+				roi = Roi(Xposition, Yposition, Width, Height)
+				image.setRoi(roi)
+				IJ.run(image, "Crop", "");
+				imageSet[v] = image
+				image.changes = False
+				image.close()
+
+				
+			roim.close()
+
+			yImages[k] = imageSet
+			k = k + 1
+			j = j + 1
+
+		allImages[l] = yImages
+		l = l + 1
+
+	
+	areaFractionsArray = [0] * 5
+
+	
+	for yImages in allImages:
+		for imageSet in yImages:
+			imp = imageSet['Nuc']
+	
+			maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
+			impM = ImagePlus("Found maxima", maximp)
+
+			#impM.show()
+
+			#WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+	
+			if not displayImages:
+				imp.changes = False
+				imp.close()
+
+			# Counts and measures the area of particles and adds them to a table called areas. Also adds them to the ROI manager
+
+			table = ResultsTable()
+			roim = RoiManager(True)
+			ParticleAnalyzer.setRoiManager(roim); 
+			pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
+			pa.setHideOutputImage(True)
+			imp = impM
+			# imp.getProcessor().invert()
+			pa.analyze(imp)
+
+			if not displayImages:
+				imp.changes = False
+				imp.close()
+
+			areas = areas + table.getColumn(0)
+
+			# This loop goes through the remaining channels for the other markers, by replacing the ch00 at the end with its corresponding channel
+			# It will save all the area fractions into a 2d array called areaFractionsArray
+	
+			
+			for chan in channels:
+				v, x = chan
+				# Opens each image and thresholds
+		
+				imp = imageSet[v]
+				IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
+
+				ic = ImageConverter(imp);
+				ic.convertToGray8();
+				IJ.setThreshold(imp, lowerBounds[x], 255)
+				if displayImages:
+					WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+				IJ.run(imp, "Convert to Mask", "")
+	
+				# Measures the area fraction of the new image for each ROI from the ROI manager.
+				areaFractions = []
+				for roi in roim.getRoisAsArray():
+					imp.setRoi(roi)
+					stats = imp.getStatistics(Measurements.AREA_FRACTION)
+					areaFractions.append(stats.areaFraction)
 	
 		# Saves the results in areaFractionArray
-	  			
-		areaFractionsArray[x] = areaFractions
+				
+				areaFractionsArray[x] = areaFractionsArray[x] + areaFractions
 
-	roim.close()
+			roim.close()
 
 	
-	for chan in channels:
-		v, x = chan
+			for chan in channels:
+				v, x = chan
 		
-		imp = images[x]
-		imp.deleteRoi()
-		roim = RoiManager(True)
-		ParticleAnalyzer.setRoiManager(roim); 
-		pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
-		pa.analyze(imp)
+				imp = imageSet[v]
+				imp.deleteRoi()
+				roim = RoiManager(True)
+				ParticleAnalyzer.setRoiManager(roim); 
+				pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
+				pa.analyze(imp)
 		
-		blobs = []
-		for roi in roim.getRoisAsArray():
-	  		imp.setRoi(roi)
-	  		stats = imp.getStatistics(Measurements.AREA)
-	  		blobs.append(stats.area)
+				blobs = []
+				for roi in roim.getRoisAsArray():
+					imp.setRoi(roi)
+					stats = imp.getStatistics(Measurements.AREA)
+					blobs.append(stats.area)
 
-		blobsarea[x] = sum(blobs)
-		blobsnuclei[x] = len(blobs)
-	 
+				blobsarea[x] = blobsarea[x] + sum(blobs)
+				blobsnuclei[x] = blobsnuclei[x] + len(blobs)
 
 
-		if not displayImages:
-			imp.changes = False
-			imp.close()
-		roim.reset()
-		roim.close()
+
+				if not displayImages:
+					imp.changes = False
+					imp.close()
+				roim.reset()
+				roim.close()
 
 	# Creates the summary dictionary which will correspond to a single row in the output csv, with each key being a column
 
 	summary = {}
-			
 	summary['Image'] = filename
 	summary['Directory'] = subFolder
 
@@ -272,23 +342,23 @@ def process(subFolder, outputDirectory, filename):
 	fieldnames.append("organoid-area")
 	
 	for chan in channels:
-  		v, x = chan
-	  	summary[v+"-positive"] = 0
-	  	fieldnames.append(v+"-positive")
-	  	
-	  	summary[v+"-intensity"] = intensities[x]
-	  	fieldnames.append(v+"-intensity")
+		v, x = chan
+		summary[v+"-positive"] = 0
+		fieldnames.append(v+"-positive")
+		
+		summary[v+"-intensity"] = intensities[x]
+		fieldnames.append(v+"-intensity")
 
-	  	summary[v+"-blobsarea"] = blobsarea[x]
-	  	fieldnames.append(v+"-blobsarea")
+		summary[v+"-blobsarea"] = blobsarea[x]
+		fieldnames.append(v+"-blobsarea")
 
-	  	summary[v+"-blobsnuclei"] = blobsnuclei[x]
-	  	fieldnames.append(v+"-blobsnuclei")
+		summary[v+"-blobsnuclei"] = blobsnuclei[x]
+		fieldnames.append(v+"-blobsnuclei")
 
 
-	  	
+		
 	# Adds the column for colocalization between first and second marker
-  
+
 	if len(channels) > 2:
 		summary[channels[1][0]+'-'+channels[2][0]+'-positive'] = 0
 		fieldnames.append(channels[1][0]+'-'+channels[2][0]+'-positive')
