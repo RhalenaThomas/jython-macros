@@ -164,6 +164,7 @@ def process(subFolder, outputDirectory, filename):
 	if displayImages:
 		imp.show()
 		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+
 	#maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
 	#impM = ImagePlus("Found maxima", maximp)
 
@@ -183,6 +184,7 @@ def process(subFolder, outputDirectory, filename):
 	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
 	pa.setHideOutputImage(True)
 	#imp = impM
+
 	# imp.getProcessor().invert()
 	pa.analyze(imp)
 
