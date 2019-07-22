@@ -1,3 +1,12 @@
+'''
+		OSM: Organoid Size Measurer 			- ImageJ Macro written in  Python 
+		
+		Input 		- Directory containing Organoid bright field images
+		
+		Output		- CSV file containing size and shape descriptors for each organoid image
+
+		Written by: 						Eddie Cai
+'''
 
 # Import required packages
 
