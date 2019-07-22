@@ -51,39 +51,30 @@ gd.showDialog()
 if gd.getNextChoice() == "Yes, enable thresholding mode":
 	displayImages = True
 
-
-
-
-
-
-
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):  
-  	gd = GenericDialog("Channel Options")  
+	gd = GenericDialog("Channel Options")  
 
 	gd.addStringField("Brain Region:", "")
 
-
-	
 
 	gd.addMessage("Name the markers associated with this directory:")
 	gd.addMessage(inputDirectory + subFolder)  
 	gd.addMessage("(Leave empty to ignore)")
 	gd.addMessage("")
-  	gd.addStringField("Channel 1:", "HEMO")
-  	gd.addStringField("Minimum size for Channel 1:", "20")
+	gd.addStringField("Channel 1:", "HEMO")
+	gd.addStringField("Minimum size for Channel 1:", "20")
 	gd.addStringField("Max size for Channel 1:", "500")
 
 	
 	gd.addMessage("")
-  	gd.addStringField("Channel 2:", "DAB")
-  	gd.addStringField("Minimum size for Channel 2:", "30")
+	gd.addStringField("Channel 2:", "DAB")
+	gd.addStringField("Minimum size for Channel 2:", "30")
 	gd.addStringField("Minimum size for Channel 2:", "500")
- # 	gd.addStringField("Channel 3:", "")
+	#	gd.addStringField("Channel 3:", "")
 
 
-  	
-  	gd.showDialog()
+	gd.showDialog()
 
 	channelNames = []
 
@@ -105,17 +96,17 @@ def getChannels(subFolder):
 		if v[0] != "":
 			channels.append(v)
 
-  	if gd.wasCanceled():  
+	if gd.wasCanceled():  
 		print "User canceled dialog!"  
 		return
 		
-  	return region, tooSmallHEMO, tooSmallDAB, tooBigHEMO, tooBigDAB, channels
+	return region, tooSmallHEMO, tooSmallDAB, tooBigHEMO, tooBigDAB, channels
 
 # Function to get the thresholds.
 
 def getThresholds():
 	thresholds = {}
-	
+
 	gd = GenericDialog("Threshold options")
 	gd.addChoice("How would you like to set your thresholds?", ["default", "use threshold csv file"], "default")
 	gd.showDialog()
@@ -134,7 +125,7 @@ def getThresholds():
 
 def getNames():
 	info = []
-	
+
 	gd = GenericDialog("Naming options")
 	gd.addChoice("How would you like to output your results?", ["default", "use information csv file"], "default")
 	gd.showDialog()
@@ -151,7 +142,7 @@ def getNames():
 			reader = csv.DictReader(csvfile)
 			for row in reader:
 				info.append(row)
-	
+
 	return info
 
 ############# Main loop, will run for every image. ##############
@@ -298,12 +289,12 @@ def process(subFolder, outputDirectory, filename):
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
 		areaFractions = []
 		for roi in roim.getRoiManager().getRoisAsArray():
-	  		imp.setRoi(roi)
-	  		stats = imp.getStatistics(Measurements.AREA_FRACTION)
-	  		areaFractions.append(stats.areaFraction)
+			imp.setRoi(roi)
+			stats = imp.getStatistics(Measurements.AREA_FRACTION)
+			areaFractions.append(stats.areaFraction)
 	
 		# Saves the results in areaFractionArray
-	  	
+		
 		areaFractionsArray[x] = areaFractions
 	
 	roim.close()
@@ -323,19 +314,16 @@ def process(subFolder, outputDirectory, filename):
 		blobs = []
 		cell = []
 		for roi in roim.getRoiManager().getRoisAsArray():
-	  		imp.setRoi(roi)
-	  		stats = imp.getStatistics(Measurements.AREA)
-	  		blobs.append(stats.area)
-	  		if stats.area > tooSmallThresholdDAB and stats.area < tooBigThresholdDAB:
-	  			cell.append(stats.area)
+			imp.setRoi(roi)
+			stats = imp.getStatistics(Measurements.AREA)
+			blobs.append(stats.area)
+			if stats.area > tooSmallThresholdDAB and stats.area < tooBigThresholdDAB:
+				cell.append(stats.area)
 
 		blobsarea[x] = sum(blobs)
 		blobsnuclei[x] = len(blobs)
-	 
-	
-	 
-	 
-	 	cells[x] = len(cell)
+
+		cells[x] = len(cell)
 		imp.changes = False
 		
 		imp.close()
@@ -350,7 +338,7 @@ def process(subFolder, outputDirectory, filename):
 	summary['Directory'] = subFolder
 
 	# Adds usual columns
-	
+
 	summary['size-average'] = 0
 	summary['#nuclei'] = 0
 	summary['all-negative'] = 0
@@ -359,7 +347,7 @@ def process(subFolder, outputDirectory, filename):
 	summary['too-small-(<'+str(tooSmallThreshold)+')'] = 0
 
 
-	
+
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
 	fieldnames = ['Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
@@ -371,46 +359,45 @@ def process(subFolder, outputDirectory, filename):
 				fieldnames.insert(0, key)
 				summary[key] = value;
 
-
 	# Adds the columns for each individual marker (ignoring Dapi since it was used to count nuclei)
 
 	summary["tissue-area"] = bigareas[0]
 	fieldnames.append("tissue-area")
 	
 	for chan in channels:
-  		v, x = chan
-	  	summary[v+"-HEMO-cells"] = 0
-	  	fieldnames.append(v+"-HEMO-cells")
-	  	
-	  	summary[v+"-intensity"] = intensities[x]
-	  	fieldnames.append(v+"-intensity")
+		v, x = chan
+		summary[v+"-HEMO-cells"] = 0
+		fieldnames.append(v+"-HEMO-cells")
+		
+		summary[v+"-intensity"] = intensities[x]
+		fieldnames.append(v+"-intensity")
 
-	  	summary[v+"-area"] = blobsarea[x] 
-	  	fieldnames.append(v+"-area")
+		summary[v+"-area"] = blobsarea[x] 
+		fieldnames.append(v+"-area")
 
 		summary[v+"-area/tissue-area"] = blobsarea[x] / bigareas[0]
 		fieldnames.append(v+"-area/tissue-area")
 
-	  	summary[v+"-particles"] = blobsnuclei[x]
-	  	fieldnames.append(v+"-particles")
+		summary[v+"-particles"] = blobsnuclei[x]
+		fieldnames.append(v+"-particles")
 
-	  	summary[v+"-cells"] = cells[x]
-	  	fieldnames.append(v+"-cells")
+		summary[v+"-cells"] = cells[x]
+		fieldnames.append(v+"-cells")
 
 
 		summary[v+"-particles/tissue-area"] = blobsnuclei[x] / bigareas[0]
 		fieldnames.append(v+"-particles/tissue-area")	
 
 		fieldnames.append(v+"-HEMO-Cells/tissue-area")
-	  	
+		
 	# Adds the column for colocalization between first and second marker
-  
+
 	if len(channels) > 2:
 		summary[channels[1][0]+'-'+channels[2][0]+'-positive'] = 0
 		fieldnames.append(channels[1][0]+'-'+channels[2][0]+'-positive')
 		
 	# Adds the columns for colocalization between all three markers
-	
+
 	if len(channels) > 3:
 		summary[channels[1][0]+'-'+channels[3][0]+'-positive'] = 0
 		summary[channels[2][0]+'-'+channels[3][0]+'-positive'] = 0
@@ -419,8 +406,6 @@ def process(subFolder, outputDirectory, filename):
 		fieldnames.append(channels[1][0]+'-'+channels[3][0]+'-positive')
 		fieldnames.append(channels[2][0]+'-'+channels[3][0]+'-positive')
 		fieldnames.append(channels[1][0]+'-'+channels[2][0]+'-' +channels[3][0]+ '-positive')
-	 
-
 
 
 	# Loops through each particle and adds it to each field that it is True for. 
@@ -466,11 +451,11 @@ def process(subFolder, outputDirectory, filename):
 	# Calculate the average of the particles sizes
 
 	for chan in channels:
-  		v, x = chan
-	  	summary[v+"-cells/tissue-area"] = summary[v+"-cells"] / bigareas[0]
-	  	
+		v, x = chan
+		summary[v+"-cells/tissue-area"] = summary[v+"-cells"] / bigareas[0]
+		
 
-  	if float(summary['#nuclei']) > 0: 
+	if float(summary['#nuclei']) > 0: 
 			summary['size-average'] = round( areaCounter / summary['#nuclei'], 2)
 
 
@@ -479,9 +464,9 @@ def process(subFolder, outputDirectory, filename):
 		fieldnames = ["Directory", "Image"]
 
 		for chan in channels:
-  			v, x = chan
-		  	summary[v+"-threshold"] = maxThresholds[x]
-  			fieldnames.append(v+"-threshold")
+			v, x = chan
+			summary[v+"-threshold"] = maxThresholds[x]
+			fieldnames.append(v+"-threshold")
 			allMaxThresholds[v+"-"+region].append(maxThresholds[x])
 
 
@@ -489,13 +474,13 @@ def process(subFolder, outputDirectory, filename):
 
 
 	with open(outputName, 'a') as csvfile:		
-	
+
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
 		if os.path.getsize(outputName) < 1:
 			writer.writeheader()
 		writer.writerow(summary)
 
-########################## code begins running here ##############################
+########################## Main ##############################
 
 
 # Get input and output directories
@@ -511,28 +496,26 @@ outputDirectory = dc.getDirectory()
 time = datetime.datetime.now().strftime("%Y-%m-%d")
 
 with open(outputDirectory + "log.txt", "w") as log:
-	
+
 	log.write("log: "+ time)
 	log.write("\n")
-	
+
 	log.write("________________________\n")
 	log.write("Input directory selected: " + inputDirectory + "\n")
-	
+
 	log.write("________________________\n")
 	log.write("Output directory selected: " + outputDirectory + "\n")
-	
+
 	# Finds all the subfolders in the main directory
-	
+
 	directories = []
 	
 	for subFolder in os.listdir(inputDirectory):
 		if os.path.isdir(inputDirectory + subFolder):
 			directories.append(subFolder)
-	
 
 
 
-	
 	log.write("________________________\n")
 	log.write("Default calculation thresholds: \n")
 	log.write("	areaFractionThreshold:" + str(areaFractionThreshold) + "\n")
@@ -544,9 +527,9 @@ with open(outputDirectory + "log.txt", "w") as log:
 	thresholds = getThresholds()
 
 	info = getNames()
-	
+
 	# Set arrays to store data for each subfolder
-	
+
 	allChannels = []
 	allRegions = []
 	allSmalls = []
@@ -559,15 +542,16 @@ with open(outputDirectory + "log.txt", "w") as log:
 		allRegions.append(region)
 		allSmalls.append(tooSmallHEMO)
 		allDAB.append(tooSmallDAB)
-
 		allBigHEMO.append(tooBigHEMO)
 		allBigDAB.append(tooBigDAB)
-	
+
 	# Loop that goes through each sub folder. 
-	
+
 	log.write("_______________________________________________________________________\n")
 	log.write("Beginning main directory loop: \n")
 	log.write("\n")
+
+# Sets up the max thresholds for each of the regions based on the array
 
 	if displayImages:
 		allMaxThresholds = {}
@@ -578,46 +562,47 @@ with open(outputDirectory + "log.txt", "w") as log:
 					allMaxThresholds[v+"-"+regions] = []
 
 
-
-
 	outputName = outputDirectory + "output_" + time +".csv"
 
 	if displayImages:
 		outputName = outputDirectory + "output_thresholds" + time +".csv"
-	
-	
+
+
+
+# Overwrites the output file if it already exists. 
+
 	open(outputName, 'w').close
-	
+
 	for inde, subFolder in enumerate(directories):
-	
+
 		log.write("______________________________________\n")
 		log.write("Subfolder: "+ subFolder +"\n")
 		log.write("\n")
-		
+
 		channels = allChannels[inde]
 		region = allRegions[inde]
 		tooSmallThreshold = int(allSmalls[inde])
 		tooSmallThresholdDAB = int(allDAB[inde])
 		tooBigThreshold = int(allBigHEMO[inde])
 		tooBigThresholdDAB = int(allBigDAB[inde])
-		
+
+
 		log.write("Channels: "+ str(channels) +"\n")
-		
+
 		for chan in channels:
 			v, x = chan
 			if (v + '-' + region) in thresholds:
-				lowerBounds[x] = int(round(float(thresholds[v + '-' + region])
-))
-	
+				lowerBounds[x] = int(round(float(thresholds[v + '-' + region])))
+
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
-	
+
 		# Finds all correct EVOS split channel ch0 files and runs through them one at a time (see main loop process() on top)
-	
+
 		log.write("_________________________\n")
 		log.write("Begining loop for each image \n")
 
+		# Opens each file in the subfolder and runs the process method for each.
 
-		
 		for filename in os.listdir(inputDirectory + subFolder): 
 			if filename.endswith(".TIF") or filename.endswith(".tif"):
 				log.write("Processing: " + filename +" \n")
@@ -627,9 +612,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 		log.write("\n")
 
 
-
-
-
+	#If in displayImages mode, write thresholds and averages into their own csv files, to later use for creating the threshold csv file.
 
 	if displayImages:
 
