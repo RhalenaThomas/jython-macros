@@ -23,7 +23,6 @@ from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
 from ij.gui import GenericDialog
 from ij.gui import WaitForUserDialog
-from ij.gui import Roi
 from ij.plugin.filter import MaximumFinder
 from ij.plugin.filter import ThresholdToSelection
 from ij.WindowManager import getImage
@@ -126,7 +125,7 @@ def process(subFolder, outputDirectory, filename):
 	blobsarea = [None] * 5
 	blobsnuclei = [None] * 5
 	bigAreas = [None] * 5
-	areas = [None] * 5
+
 	
 	for chan in channels:
 		v, x = chan
@@ -143,6 +142,10 @@ def process(subFolder, outputDirectory, filename):
 	
 	imp = IJ.openImage(inputDirectory + subFolder + '/' + filename)
 	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
+
+	if displayImages:
+		imp.show()
+		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 	
 	# Sets the threshold and watersheds. for more details on image processing, see https://imagej.nih.gov/ij/developer/api/ij/process/ImageProcessor.html 
 
@@ -154,75 +157,19 @@ def process(subFolder, outputDirectory, filename):
 	
 	IJ.run(imp,"Gaussian Blur...","sigma="+str(blur))
 	
-	#IJ.setThreshold(imp, lowerBounds[0], 255)
-	#IJ.run(imp, "Convert to Mask", "")
-	#IJ.run(imp, "Watershed", "")
+	IJ.setThreshold(imp, lowerBounds[0], 255)
+	IJ.run(imp, "Convert to Mask", "")
+	IJ.run(imp, "Watershed", "")
 
+	if displayImages:
+		imp.show()
+		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+	#maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
+	#impM = ImagePlus("Found maxima", maximp)
 
+	#impM.show()
 
-	x_amount = 1
-	y_amount = 1
-
-
-	l = 0
-	j = 0
-
-	allImages = {}
-	
-	while l < x_amount:
-		k = 0
-
-		yImages = {}
-		
-		while k < y_amount:
-
-			imageSet = {}
-			copy = imp.duplicate()  
-			Xposition = (int)(round((imp.width/x_amount)*l))
-			Yposition = (int)(round((imp.width/y_amount)*k))
-			Width = (int)(round(imp.width/x_amount))
-			Height = (int)(round(imp.height/y_amount))
-			roi = Roi(Xposition, Yposition, Width, Height)
-			copy.setRoi(roi)
-			IJ.run(copy, "Crop", "");
-			imageSet['Nuc'] = copy
-
-
-	
-			for chan in channels:
-				v, x = chan
-				image = images[x]
-				roi = Roi(Xposition, Yposition, Width, Height)
-				image.setRoi(roi)
-				IJ.run(image, "Crop", "");
-				imageSet[v] = image
-
-				
-
-			yImages[k] = imageSet
-			k = k + 1
-			j = j + 1
-
-		allImages[l] = yImages
-		l = l + 1
-
-	
-	areaFractionsArray = [[]] * 5
-
-	
-	for val, yImages in allImages.items():
-		for oa, imageSet in yImages.items():
-			imp = imageSet['Nuc']
-			imp.show()
-			maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
-			impM = ImagePlus("Found maxima", maximp)
-	
-	maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
-	impM = ImagePlus("Found maxima", maximp)
-
-	impM.show()
-
-	WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+	#WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 	
 	if not displayImages:
 		imp.changes = False
@@ -235,7 +182,7 @@ def process(subFolder, outputDirectory, filename):
 	ParticleAnalyzer.setRoiManager(roim); 
 	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
 	pa.setHideOutputImage(True)
-	imp = impM
+	#imp = impM
 	# imp.getProcessor().invert()
 	pa.analyze(imp)
 
@@ -243,9 +190,6 @@ def process(subFolder, outputDirectory, filename):
 		imp.changes = False
 		imp.close()
 
-
-		if table.getColumn(0) is not None:
-				areas = areas + table.getColumn(0).tolist()
 	areas = table.getColumn(0)
 
 	# This loop goes through the remaining channels for the other markers, by replacing the ch00 at the end with its corresponding channel
@@ -263,6 +207,7 @@ def process(subFolder, outputDirectory, filename):
 		ic.convertToGray8();
 		IJ.setThreshold(imp, lowerBounds[x], 255)
 		if displayImages:
+			imp.show()
 			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
 		IJ.run(imp, "Convert to Mask", "")
 	

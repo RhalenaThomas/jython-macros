@@ -331,7 +331,8 @@ def process(subFolder, outputDirectory, filename):
 
 		blobsarea[x] = sum(blobs)
 		blobsnuclei[x] = len(blobs)
-	 	
+	 
+	
 	 
 	 
 	 	cells[x] = len(cell)
@@ -361,11 +362,11 @@ def process(subFolder, outputDirectory, filename):
 	
 	# Creates the fieldnames variable needed to create the csv file at the end.
 
-	fieldnames = ['Name','Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
+	fieldnames = ['Directory', 'Image', 'size-average', 'too-big-(>'+str(tooBigThreshold)+')','too-small-(<'+str(tooSmallThreshold)+')',  '#nuclei', 'all-negative']
 
 
 	for row in info:
-		if row['Animal ID'] == filename.replace('s', '-').split('-')[0]:
+		if row['Animal ID'] == filename.replace('s', '-').replace('p', '-').split('-')[0]:
 			for key, value in row.items():
 				fieldnames.insert(0, key)
 				summary[key] = value;
@@ -466,7 +467,7 @@ def process(subFolder, outputDirectory, filename):
 
 	for chan in channels:
   		v, x = chan
-	  	summary[v+"-HEMO-Cells/tissue-area"] = summary[v+"-HEMO-cells"] / bigareas[0]
+	  	summary[v+"-cells/tissue-area"] = summary[v+"-cells"] / bigareas[0]
 	  	
 
   	if float(summary['#nuclei']) > 0: 
@@ -486,7 +487,7 @@ def process(subFolder, outputDirectory, filename):
 
 	# Opens and appends one line on the final csv file for the subfolder (remember that this is still inside the loop that goes through each image)
 
-
+
 	with open(outputName, 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
@@ -558,7 +559,8 @@ with open(outputDirectory + "log.txt", "w") as log:
 		allRegions.append(region)
 		allSmalls.append(tooSmallHEMO)
 		allDAB.append(tooSmallDAB)
-		allBigHEMO.append(tooBigHEMO)
+
+		allBigHEMO.append(tooBigHEMO)
 		allBigDAB.append(tooBigDAB)
 	
 	# Loop that goes through each sub folder. 
@@ -604,7 +606,8 @@ with open(outputDirectory + "log.txt", "w") as log:
 		for chan in channels:
 			v, x = chan
 			if (v + '-' + region) in thresholds:
-				lowerBounds[x] = int(round(float(thresholds[v + '-' + region])))
+				lowerBounds[x] = int(round(float(thresholds[v + '-' + region])
+))
 	
 		log.write("Lower Bound Thresholds: "+ str(lowerBounds) +"\n")
 	

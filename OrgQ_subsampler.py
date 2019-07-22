@@ -112,10 +112,12 @@ def process(subFolder, outputDirectory, filename):
 	
 	imp.getProcessor().invert()
 
+	imp.changes = False
+	imp.close()
 	
 
-	x_amount = 3
-	y_amount = 3
+	x_amount = 10
+	y_amount = 10
 
 
 	l = 0
@@ -123,7 +125,7 @@ def process(subFolder, outputDirectory, filename):
 	while l < x_amount:
 		k = 0
 		while k < y_amount:
-			copy = imp.duplicate()  
+			copy = IJ.openImage(inputDirectory + subFolder + '/' +  filename.replace("_ch00.tif",".tif"))
 			Xposition = (int)(round((imp.width/x_amount)*l))
 			Yposition = (int)(round((imp.width/y_amount)*k))
 			Width = (int)(round(imp.width/x_amount))
