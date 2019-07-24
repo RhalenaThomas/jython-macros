@@ -49,7 +49,7 @@ for i, subfolder in enumerate(subfolders):
 
 
 			for filename in os.listdir(inputDirectory + subfolder + '/' + subsubfolder + '/' + subsubsubfolder): 
-				if filename.endswith(".TIFF"):
+				if filename.endswith(".jpg"):
 					stack.addSlice(filename, IJ.openImage(inputDirectory + subfolder + '/' + subsubfolder + '/' + subsubsubfolder + '/' +  filename).getProcessor()) 
 			
 			IJ.save(ImagePlus(subfolder, stack), outputDirectory + '/' + subfolder + '_' + subsubfolder + '.tif')
