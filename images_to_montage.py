@@ -23,7 +23,7 @@ inputDirectory = dc.getDirectory()
 dc = DirectoryChooser("Select an output directory")
 outputDirectory = dc.getDirectory()
 
-for row in filenames:
+for row in filenames
 	for time in ["NPC", "2w", "4w"]:
 	
 		filename = inputDirectory + time + '/' + row[time]
