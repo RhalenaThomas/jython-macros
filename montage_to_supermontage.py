@@ -35,8 +35,8 @@ for condition in ["E8-1", "E8-2", "mTeSR-1", "mTeSR-2"]:
 #			try:
 			IJ.run(imp2, "Make Montage...", "columns=1 rows=12 scale=1")
 			imp3 = WindowManager.getCurrentImage() # the Montage
-			IJ.run(imp2, "Save", "save=" + outputDirectory  + time + '_' + row + '_' + condition + "superstack.tif")
-			IJ.run(imp3, "Save", "save=" + outputDirectory  + time + '_' + row + '_' + condition + "supermontage.png")
+			IJ.run(imp2, "Save", "save=" + outputDirectory  + time + '_' + column + '_' + condition + "superstack.tif")
+			IJ.run(imp3, "Save", "save=" + outputDirectory  + time + '_' + column + '_' + condition + "supermontage.tif")
 			imp3.close()
 			IJ.run("Close All", "")
 			
