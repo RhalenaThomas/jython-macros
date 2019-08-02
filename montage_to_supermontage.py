@@ -20,7 +20,7 @@ outputDirectory = dc.getDirectory()
 for condition in ["E8-1", "E8-2", "mTeSR-1", "mTeSR-2"]:
 	for column in ["A","B","C","D","E","F","G","H"]:
 		for time in ["NPC", "2w", "4w"]:
-			for row in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]:
+			for row in ["4", "5", "1", "2", "3", "11", "12", "8", "9", "10", "6", "7"]:
 				filename = inputDirectory + time + "_" + column + row + "_" + condition +"montage.tif"
 				print(filename)
 				if os.path.isfile(filename):

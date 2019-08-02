@@ -105,7 +105,8 @@ for row in filenames:
 		imp2 = WindowManager.getCurrentImage() # the Stack
 		#WaitForUserDialog("Title", "Try adjust balance").show()
 #			try:
-		IJ.run(imp2, "Make Montage...", "columns=5 rows=1 scale=0.5")
+		IJ.setForegroundColor(255, 255, 255)
+		IJ.run(imp2, "Make Montage...", "co	lumns=5 rows=1 scale=0.5, borderWidth = 2, useForegroundColor = True") 
 		imp3 = WindowManager.getCurrentImage() # the Montage
 		IJ.run(imp2, "Save", "save=" + outputDirectory + '/' + time + '_' + row['Row'] + row['Column'] + '_' + row['Condition'] + "stack.tif")
 		IJ.run(imp3, "Save", "save=" + outputDirectory + '/' + time + '_' + row['Row'] + row['Column'] + '_' + row['Condition'] + "montage.tif")
