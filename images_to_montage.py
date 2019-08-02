@@ -40,9 +40,9 @@ for row in filenames:
 			imp = IJ.openImage(empty)
 		imp.show()
 			
-		#IJ.run(imp, "Enhance Contrast", "saturated=0.35");
-		#imp.setDisplayRange(94, 738);
-		#IJ.run(imp, "Apply LUT", "");
+		IJ.run(imp, "Enhance Contrast", "saturated=0.35");
+		imp.setDisplayRange(100, 500);
+		IJ.run(imp, "Apply LUT", "");
 		IJ.run(imp, "Blue", "");
 		IJ.run(imp, "RGB Color", "");
 		imp.setTitle("Blue")
@@ -58,7 +58,7 @@ for row in filenames:
 			imp = IJ.openImage(empty)
 		imp.show()
 		IJ.run(imp, "Enhance Contrast", "saturated=0.35");
-		imp.setDisplayRange(94, 738);
+		imp.setDisplayRange(80, 620);
 		IJ.run(imp, "Apply LUT", "");
 		IJ.run(imp, "Green", "");
 		IJ.run(imp, "RGB Color", "");
@@ -74,7 +74,7 @@ for row in filenames:
 			imp = IJ.openImage(empty)
 		imp.show()
 		IJ.run(imp, "Enhance Contrast", "saturated=0.35");
-		imp.setDisplayRange(94, 738);
+		imp.setDisplayRange(250, 400);
 		IJ.run(imp, "Apply LUT", "");
 		IJ.run(imp, "Magenta", "");
 		IJ.run(imp, "RGB Color", "");
@@ -89,7 +89,7 @@ for row in filenames:
 			imp = IJ.openImage(empty)
 		imp.show()
 		IJ.run(imp, "Enhance Contrast", "saturated=0.35");
-		imp.setDisplayRange(94, 738);
+		imp.setDisplayRange(290, 500);
 		IJ.run(imp, "Apply LUT", "");
 		IJ.run(imp, "Yellow", "");
 		IJ.run(imp, "RGB Color", "");
