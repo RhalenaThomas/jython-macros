@@ -42,8 +42,7 @@ for sets in files:
    	imp2 = WindowManager.getCurrentImage() # the Stack
 	#WaitForUserDialog("Title", "Try adjust balance").show()
 	#try:
-	IJ.setForegroundColor(255, 255, 255)
-	IJ.run(imp2, "Make Montage...", "co	lumns=5 rows=1 scale=0.5, borderWidth = 2, useForegroundColor = True") 
+	IJ.run(imp2, "Make Montage...", "co	lumns=5 rows=1 scale=0.5, border=3) 
 	imp3 = WindowManager.getCurrentImage() # the Montage
 			
 	#FileSaver(imp2).saveAsTiff(outputDirectory  + time + '_' + column + '_' + condition + "superstack.tif")
