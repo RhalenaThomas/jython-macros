@@ -12,36 +12,35 @@
 '''
 
 
-import os, sys, math, csv, datetime, random
-from ij import IJ, Prefs
+import os, sys, csv
+from ij import IJ
 from ij.io import DirectoryChooser  
-from ij.io import OpenDialog
 from ij.measure import ResultsTable
 from ij.measure import Measurements
 from ij.process import ImageProcessor
 from ij.process import ImageConverter
 from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
-from ij.gui import GenericDialog
 from ij.gui import WaitForUserDialog
-from java.awt import Color
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
 displayImages = True
 
 outputname = "output"
 
-t1 = 50
+t1 = 20
 
 ############# Main loop, will run for every image. ##############
 
-def process(subFolder, outputDirectory, filename):
+def process(inputpath, outputpath):
 	
-	imp = IJ.openImage(inputDirectory + subFolder + '/' + filename)
+	imp = IJ.openImage(inputpath)
 	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 	
 	
 	IJ.setThreshold(imp, t1, 255)
+	imp.show()
+	WaitForUserDialog("Title", "Look at image").show()
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Watershed", "")
 
@@ -50,7 +49,7 @@ def process(subFolder, outputDirectory, filename):
 	table = ResultsTable()
 	roim = RoiManager(True)
 	ParticleAnalyzer.setRoiManager(roim); 
-	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 15, 9999999999999999, 0.2, 1.0)
+	pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER, Measurements.AREA, table, 50, 9999999999999999, 0.2, 1.0)
 	pa.setHideOutputImage(True)
 	pa.analyze(imp)
 
@@ -59,14 +58,18 @@ def process(subFolder, outputDirectory, filename):
 
 	areas = table.getColumn(0)
 
+	summary = {}
 
 	summary['Image'] = filename
-	summary['Directory'] = subFolder
+	summary['Nuclei.count'] = len(areas)
+	summary['Area.Covered'] = sum(areas)
 
-	with open(outputDirectory + "/" + outputName +".csv", 'a') as csvfile:		
+	fieldnames = list(summary.keys())
+
+	with open(outputpath, 'a') as csvfile:		
 	
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore', lineterminator = '\n')
-		if os.path.getsize(outputDirectory + "/" + outputName +".csv") < 1:
+		if os.path.getsize(outputDirectory + "/" + outputname +".csv") < 1:
 			writer.writeheader()
 		writer.writerow(summary)
 
@@ -84,27 +87,17 @@ dc = DirectoryChooser("Choose an output directory")
 outputDirectory = dc.getDirectory()
 
 
-
-# Finds all the subfolders in the main directory
-
-directories = []
+open(outputDirectory + "/" + outputname +".csv", 'w').close
 	
-for subFolder in os.listdir(inputDirectory):
-	if os.path.isdir(inputDirectory + subFolder):
-		directories.append(subFolder)
-
-	for inde, subFolder in enumerate(directories):
-	
-		open(outputDirectory + "/" + outputName +".csv", 'w').close
-		
-		for filename in os.listdir(inputDirectory + subFolder): 
-			process(subFolder, outputDirectory, filename)
+for filename in os.listdir(inputDirectory): 
+	if "d0.TIF" in filename:
+		process(inputDirectory + '/' + filename, outputDirectory + "/" + outputname +".csv")
 
 
 cat = """
 
       \    /\           Macro completed!
-       )  ( ')   meow!
+       )  ( ')   meow!	
       (  /  )
        \(__)|"""
 	
