@@ -24,7 +24,7 @@ from ij.plugin.filter import ParticleAnalyzer
 from ij.gui import WaitForUserDialog
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
-displayImages = True
+displayImages = False
 
 outputname = "output"
 
@@ -39,8 +39,8 @@ def process(inputpath, outputpath):
 	
 	
 	IJ.setThreshold(imp, t1, 255)
-	imp.show()
-	WaitForUserDialog("Title", "Look at image").show()
+	#imp.show()
+	#WaitForUserDialog("Title", "Look at image").show()
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Watershed", "")
 
@@ -60,9 +60,11 @@ def process(inputpath, outputpath):
 
 	summary = {}
 
-	summary['Image'] = filename
-	summary['Nuclei.count'] = len(areas)
-	summary['Area.Covered'] = sum(areas)
+	if areas:
+	
+		summary['Image'] = filename
+		summary['Nuclei.count'] = len(areas)
+		summary['Area.Covered'] = sum(areas)
 
 	fieldnames = list(summary.keys())
 
