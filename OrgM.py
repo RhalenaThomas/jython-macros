@@ -25,13 +25,13 @@ from ij.plugin.filter import ParticleAnalyzer
 
 # Set Threshold mode
 
-threshold_mode = False
+thresholdMode = False
 
 gd = GenericDialog("Set Threshold Mode")
 gd.addChoice("Would you like to enable thresholding mode?", ["No, run the normal macro", "Yes, enable thresholding mode"], "No")
 gd.showDialog()
 if gd.getNextChoice() == "Yes, enable thresholding mode":
-	threshold_mode = True
+	thresholdMode = True
 
 
 # Set default thresholds:
@@ -100,7 +100,8 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				IJ.run(imp, "Convert to Mask", "")
 				IJ.run(imp, "Invert", "")
 				IJ.run(imp, "Fill Holes", "")
-				IJ.run(imp, "Watershed", "")
+				if not thresholdMode:
+					IJ.run(imp, "Watershed", "")
 
 
 
