@@ -5,7 +5,7 @@
 		
 		Output		- CSV file containing size and shape descriptors for each organoid image
 
-		Written by: 						Eddie Cai - NeuroEDDU
+		Written by: 						Eddie Cai and Rhalena Thomas - NeuroEDDU 
 '''
 
 # Import required packages
@@ -29,6 +29,7 @@ thresholdMode = False
 
 gd = GenericDialog("Set Threshold Mode")
 gd.addChoice("Would you like to enable thresholding mode?", ["No, run the normal macro", "Yes, enable thresholding mode"], "No")
+gd.addMessage("Watershed will not be run in threshold mode and will be added in macro mode.")
 gd.showDialog()
 if gd.getNextChoice() == "Yes, enable thresholding mode":
 	thresholdMode = True
@@ -39,8 +40,8 @@ if gd.getNextChoice() == "Yes, enable thresholding mode":
 #	area_threshold is the minimum area a roi must have to be considered an organoid for the isorganoid column
 #	minimum_size is the minimum area to be considered an ROI
 
-gd = GenericDialog("Other Thresholds")
-
+gd = GenericDialog("Other Thresholds.")
+gd.addMessage("Ajust only alter if you have determined new thresholds are needed.")
 gd.addStringField("Round threshold", "0.62")
 gd.addStringField("Area Threshold", "50000")
 gd.addStringField("Minimum Size", "3000")
@@ -53,7 +54,7 @@ minimum_size = float(gd.getNextString())
 #set pix_width and pix_height to real dimensions per pixel 
 
 gd = GenericDialog("Dimension Options")
-
+gd.addMessage("Default Pixel to uM conversion for 10X Evos")
 gd.addStringField("Pixel Width:", "0.8777017")
 gd.addStringField("Pixel Height:", "0.8777017")
 gd.showDialog()
@@ -73,8 +74,9 @@ outputDirectory = dc.getDirectory()
 
 with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")+".csv", "w") as output:
 
+# set the output column names for the csv sheet
 
-	output.write("Subfolder, File Name,Feret,MinFeret,Average Feret,Area,Equivalent Circle Diameter, Ellipse Major, Ellipse Minor, Circularity,Roundness,Solidity, isOrganoid \n")
+	output.write("Subfolder, File Name,Feret,MinFeret,Average Feret,Area,Equivalent Circle Diameter, Ellipse Major, Ellipse Minor, Circularity,Roundness,Solidity, MeetsCriteria \n")
 	subfolders = []
 
 	# Finds subfolders in input directory
@@ -90,7 +92,7 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 
 	for subfolder in subfolders:
 
-		#Opens each image that ends with .TIF and contains TR (stitched)
+		#Opens each image
 
 		for filename in os.listdir(inputDirectory + subfolder): 
 			imp = IJ.openImage(inputDirectory + subfolder + '/' + filename)	
