@@ -18,27 +18,38 @@ from ij.measure import Measurements
 from ij.process import ImageProcessor
 from ij.process import ImageConverter
 from ij.gui import WaitForUserDialog
+from ij.gui import GenericDialog
 from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
 
 
 # Set Threshold mode
 
-thresholdMode = False
+threshold_mode = False
+
+gd = GenericDialog("Set Threshold Mode")
+gd.addChoice("Would you like to enable thresholding mode?", ["No, run the normal macro", "Yes, enable thresholding mode"], "No")
+gd.showDialog()
+if gd.getNextChoice() == "Yes, enable thresholding mode":
+	threshold_mode = True
+
 
 # Set default thresholds:
 #	round_threshold is the minimum roundness a roi must have to be considered an organoid for the isOrganoid column
 #	area_threshold is the minimum area a roi must have to be considered an organoid for the isorganoid column
 #	minimum_size is the minimum area to be considered an ROI
 
-round_threshold = 0.62
-area_threshold = 50000
-minimum_size = 3000
-
 #set pix_width and pix_height to real dimensions per pixel 
 
-pix_width = 0.8777017
-pix_height = 0.8777017
+gd = GenericDialog("Dimension Options")
+
+gd.addStringField("Pixel Width:", "0.8777017")
+gd.addStringField("Pixel Height:", "0.8777017")
+
+pix_width = gd.getNextString()
+pix_height = gd.getNextString()
+
+
 
 # Get input and output directories with GUI 
 
