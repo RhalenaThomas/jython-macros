@@ -39,12 +39,24 @@ if gd.getNextChoice() == "Yes, enable thresholding mode":
 #	area_threshold is the minimum area a roi must have to be considered an organoid for the isorganoid column
 #	minimum_size is the minimum area to be considered an ROI
 
+gd = GenericDialog("Other Thresholds")
+
+gd.addStringField("Round threshold", "0.62")
+gd.addStringField("Area Threshold", "50000")
+gd.addStringField("Minimum Size", "3000")
+gd.showDialog()
+
+round_threshold = float(gd.getNextString())
+area_threshold = float(gd.getNextString())
+minimum_size = float(gd.getNextString())
+
 #set pix_width and pix_height to real dimensions per pixel 
 
 gd = GenericDialog("Dimension Options")
 
 gd.addStringField("Pixel Width:", "0.8777017")
 gd.addStringField("Pixel Height:", "0.8777017")
+gd.showDialog()
 
 pix_width = gd.getNextString()
 pix_height = gd.getNextString()
