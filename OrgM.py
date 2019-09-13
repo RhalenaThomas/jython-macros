@@ -21,7 +21,10 @@ from ij.gui import WaitForUserDialog
 from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
 
-thresholdMode = True
+
+# Set Threshold mode
+
+thresholdMode = False
 
 # Set default thresholds:
 #	round_threshold is the minimum roundness a roi must have to be considered an organoid for the isOrganoid column

@@ -1,4 +1,3 @@
-
 import os, sys
 from ij import IJ, ImagePlus, ImageStack
 from ij.io import DirectoryChooser
