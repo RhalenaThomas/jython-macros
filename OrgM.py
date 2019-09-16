@@ -29,7 +29,7 @@ thresholdMode = False
 
 gd = GenericDialog("Set Threshold Mode")
 gd.addChoice("Would you like to enable thresholding mode?", ["No, run the normal macro", "Yes, enable thresholding mode"], "No")
-gd.addMessage("Watershed will not be run in threshold mode and will be added in macro mode.")
+gd.addMessage("Watershed will NOT be run in threshold mode and WILL BE RUN in macro mode.")
 gd.showDialog()
 if gd.getNextChoice() == "Yes, enable thresholding mode":
 	thresholdMode = True
@@ -41,7 +41,7 @@ if gd.getNextChoice() == "Yes, enable thresholding mode":
 #	minimum_size is the minimum area to be considered an ROI
 
 gd = GenericDialog("Other Thresholds.")
-gd.addMessage("Ajust only alter if you have determined new thresholds are needed.")
+gd.addMessage("Ajust after you have determined if new thresholds are needed.")
 gd.addStringField("Round threshold", "0.62")
 gd.addStringField("Area Threshold", "50000")
 gd.addStringField("Minimum Size", "3000")
