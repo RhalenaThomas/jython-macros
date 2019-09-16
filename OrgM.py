@@ -54,7 +54,9 @@ minimum_size = float(gd.getNextString())
 #set pix_width and pix_height to real dimensions per pixel 
 
 gd = GenericDialog("Dimension Options")
-gd.addMessage("Default Pixel to uM conversion for 10X Evos")
+gd.addMessage("Conversion from pixles to uM :Evos 10X pixle width/height = 0.8777017 uM")
+gd.addMessage("Conversion from pixles to uM :Evos 4X  pixle width/height = 2.1546047 uM")
+gd.addMessage("Conversion from pixles to uM :Calculate for your objective and enter below")
 gd.addStringField("Pixel Width:", "0.8777017")
 gd.addStringField("Pixel Height:", "0.8777017")
 gd.showDialog()
