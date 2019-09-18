@@ -29,10 +29,16 @@ thresholdMode = False
 
 gd = GenericDialog("Set Threshold Mode")
 gd.addChoice("Would you like to enable thresholding mode?", ["No, run the normal macro", "Yes, enable thresholding mode"], "No")
-gd.addMessage("Watershed will NOT be run in threshold mode and WILL BE RUN in macro mode.")
 gd.showDialog()
 if gd.getNextChoice() == "Yes, enable thresholding mode":
 	thresholdMode = True
+
+gd = GenericDialog("Set Watershed Mode")
+gd.addChoice("Would you like to enable watershedding?", ["No, do not watershed", "Yes, enable watershed"], "No")
+gd.showDialog()
+if gd.getNextChoice() == "Yes, enable watershed":
+	watershedMode = True
+
 
 
 # Set default thresholds:
@@ -116,7 +122,7 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				IJ.run(imp, "Convert to Mask", "")
 				IJ.run(imp, "Invert", "")
 				IJ.run(imp, "Fill Holes", "")
-				if not thresholdMode:
+				if  watershedMode:
 					IJ.run(imp, "Watershed", "")
 
 
