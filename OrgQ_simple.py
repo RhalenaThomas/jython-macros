@@ -33,7 +33,7 @@ from ij.WindowManager import setTempCurrentImage
 MF = MaximumFinder()
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
-displayImages = False
+displayImages = True
 
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
@@ -145,7 +145,7 @@ def process(subFolder, outputDirectory, filename):
 
 	if displayImages:
 		imp.show()
-		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+		WaitForUserDialog("Title", "Adjust Threshold").show()
 	
 	# Sets the threshold and watersheds. for more details on image processing, see https://imagej.nih.gov/ij/developer/api/ij/process/ImageProcessor.html 
 
@@ -163,14 +163,8 @@ def process(subFolder, outputDirectory, filename):
 
 	if displayImages:
 		imp.show()
-		WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
-
-	#maximp = MF.findMaxima(imp.getProcessor(), maxima, lowerBounds[0], MF.SEGMENTED, True, False)
-	#impM = ImagePlus("Found maxima", maximp)
-
-	#impM.show()
-
-	#WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+		
+		WaitForUserDialog("Title", "Adjust Threshold").show()
 	
 	if not displayImages:
 		imp.changes = False
@@ -404,6 +398,7 @@ with open(outputDirectory + "log.txt", "w") as log:
 	for subFolder in os.listdir(inputDirectory):
 		if os.path.isdir(inputDirectory + subFolder):
 			directories.append(subFolder)
+			print("subfolder found")
 	
 	# A few default options
 	
