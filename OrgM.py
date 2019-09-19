@@ -33,6 +33,10 @@ gd.showDialog()
 if gd.getNextChoice() == "Yes, enable thresholding mode":
 	thresholdMode = True
 
+
+# Set watershed
+watershedMode = False
+
 gd = GenericDialog("Set Watershed Mode")
 gd.addChoice("Would you like to enable watershedding?", ["No, do not watershed", "Yes, enable watershed"], "No")
 gd.showDialog()
@@ -122,7 +126,8 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				IJ.run(imp, "Convert to Mask", "")
 				IJ.run(imp, "Invert", "")
 				IJ.run(imp, "Fill Holes", "")
-				if  watershedMode:
+				
+				if watershedMode:
 					IJ.run(imp, "Watershed", "")
 
 
@@ -137,6 +142,11 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				index = -1
 				maxArea = -1
 
+				if thresholdMode:
+					imp.show()
+					#WaitForUserDialog("Title", "I want to see the ROI").show()
+
+
 				# Check if Column even exists (in case it didn't measure anything)
 
 				if table.getColumnIndex("Area") != -1:
@@ -147,9 +157,7 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 						if area > maxArea:
 							index = i
 
-				if thresholdMode:
-					imp.show()
-
+				
 
 				# Writes everything in the output file
 				if index != -1:
