@@ -30,7 +30,7 @@ from ij.WindowManager import setTempCurrentImage
 
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
-displayImages = False
+displayImages = True
 
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
@@ -157,9 +157,7 @@ def process(subFolder, outputDirectory, filename):
 	IJ.setThreshold(imp, lowerBounds[0], 255)
 
 	if displayImages:
-		imp.show()
-		WaitForUserDialog("Title", "Have a look").show()
-		
+		imp.show()	
 	IJ.run(imp, "Convert to Mask", "")
 	IJ.run(imp, "Watershed", "")
 
