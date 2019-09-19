@@ -7,7 +7,7 @@
 		
 		Output		- CSV file containing nuclei counts and marker colocalization data for each image 
 
-		Written by: 						Eddie Cai & Rhalena A. Thomas & Vince & Valerio
+		Written by: 						Eddie Cai & Rhalena A. Thomas & Vince Soubanier & Valerio
 '''
 
 
@@ -23,17 +23,14 @@ from ij.plugin.frame import RoiManager
 from ij.plugin.filter import ParticleAnalyzer
 from ij.gui import GenericDialog
 from ij.gui import WaitForUserDialog
-from ij.plugin.filter import MaximumFinder
 from ij.plugin.filter import ThresholdToSelection
 from ij.WindowManager import getImage
 from ij.WindowManager import setTempCurrentImage
 
 
 
-MF = MaximumFinder()
-
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
-displayImages = True
+displayImages = False
 
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
@@ -113,6 +110,8 @@ def process(subFolder, outputDirectory, filename):
 	imp.getProcessor().invert()
 	rm = RoiManager(True)
 	imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
+
+
 	boundroi = ThresholdToSelection.run(imp)
 	rm.addRoi(boundroi)
 
@@ -129,7 +128,7 @@ def process(subFolder, outputDirectory, filename):
 	
 	for chan in channels:
 		v, x = chan
-		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  rreplace(filename,"_ch00.tif",".tif")) 
+		images[x] = IJ.openImage(inputDirectory + subFolder + '/' +  rreplace(filename,"_ch00.tif","_ch0"+str(x)+".tif")) 
 		imp = images[x]
 		for roi in rm.getRoisAsArray():
 			imp.setRoi(roi)
@@ -143,9 +142,7 @@ def process(subFolder, outputDirectory, filename):
 	imp = IJ.openImage(inputDirectory + subFolder + '/' + filename)
 	IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
 
-	if displayImages:
-		imp.show()
-		WaitForUserDialog("Title", "Adjust Threshold").show()
+
 	
 	# Sets the threshold and watersheds. for more details on image processing, see https://imagej.nih.gov/ij/developer/api/ij/process/ImageProcessor.html 
 
@@ -158,13 +155,14 @@ def process(subFolder, outputDirectory, filename):
 	IJ.run(imp,"Gaussian Blur...","sigma="+str(blur))
 	
 	IJ.setThreshold(imp, lowerBounds[0], 255)
-	IJ.run(imp, "Convert to Mask", "")
-	IJ.run(imp, "Watershed", "")
 
 	if displayImages:
 		imp.show()
+		WaitForUserDialog("Title", "Have a look").show()
 		
-		WaitForUserDialog("Title", "Adjust Threshold").show()
+	IJ.run(imp, "Convert to Mask", "")
+	IJ.run(imp, "Watershed", "")
+
 	
 	if not displayImages:
 		imp.changes = False
@@ -182,10 +180,6 @@ def process(subFolder, outputDirectory, filename):
 	# imp.getProcessor().invert()
 	pa.analyze(imp)
 
-	if not displayImages:
-		imp.changes = False
-		imp.close()
-
 	areas = table.getColumn(0)
 
 	# This loop goes through the remaining channels for the other markers, by replacing the ch00 at the end with its corresponding channel
@@ -202,9 +196,11 @@ def process(subFolder, outputDirectory, filename):
 		ic = ImageConverter(imp);
 		ic.convertToGray8();
 		IJ.setThreshold(imp, lowerBounds[x], 255)
+		
 		if displayImages:
 			imp.show()
-			WaitForUserDialog("Title", "aDJUST tHRESHOLD").show()
+			WaitForUserDialog("Title", "Adjust Threshold for Marker " + v).show()
+			
 		IJ.run(imp, "Convert to Mask", "")
 	
 		# Measures the area fraction of the new image for each ROI from the ROI manager.
@@ -406,7 +402,6 @@ with open(outputDirectory + "log.txt", "w") as log:
 	tooSmallThreshold = 50
 	tooBigThreshold = 500
 	blur = 1
-	maxima = 20
 	
 	log.write("________________________\n")
 	log.write("Default calculation thresholds: \n")
