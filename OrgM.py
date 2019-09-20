@@ -35,6 +35,7 @@ if gd.getNextChoice() == "Yes, enable thresholding mode":
 
 
 # Set watershed
+
 watershedMode = False
 
 gd = GenericDialog("Set Watershed Mode")
@@ -135,7 +136,9 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				#Measure particles 
 
 				table = ResultsTable()
-				pa = ParticleAnalyzer(ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES, Measurements.AREA | Measurements.FERET | Measurements.CIRCULARITY | Measurements.SHAPE_DESCRIPTORS | Measurements.CENTROID | Measurements.ELLIPSE, table, minimum_size, 9999999999999999, 0.1, 1.0)
+				roim = RoiManager(True)
+				ParticleAnalyzer.setRoiManager(roim); 
+				pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER | ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES, Measurements.AREA | Measurements.FERET | Measurements.CIRCULARITY | Measurements.SHAPE_DESCRIPTORS | Measurements.CENTROID | Measurements.ELLIPSE, table, minimum_size, 9999999999999999, 0.2, 1.0)
 				pa.setHideOutputImage(True)
 				pa.analyze(imp)
 
@@ -172,7 +175,9 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				imp.changes = False
 				imp.close()
 
-
+				roim.reset()
+				roim.close()
+				
 # End of macro
 
 cat = """
