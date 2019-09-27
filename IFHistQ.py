@@ -36,8 +36,8 @@ if gd.getNextChoice() == "Yes, enable thresholding mode":
 	thresholdMode = True
 
 gd = GenericDialog("Set Thresholds")
-gd.addStringField("Lower bound for Red", "100")
-gd.addStringField("Lower bound for Green", "100")
+gd.addStringField("Lower bound for Red", "90")
+gd.addStringField("Lower bound for Green", "90")
 gd.addStringField("Lower bound for Blue", "100")
 gd.showDialog()
 
@@ -55,7 +55,7 @@ thresholds["Blue"] = int(gd.getNextString())
 
 gd = GenericDialog("Other Thresholds.")
 gd.addMessage("Ajust after you have determined if new thresholds are needed.")
-gd.addStringField("Minimum Size of ROI", "20")
+gd.addStringField("Minimum Size of ROI", "60")
 gd.addStringField("Maximum Size of ROI", "1000")
 
 gd.showDialog()
@@ -66,16 +66,6 @@ maximum_size = float(gd.getNextString())
 
 #set pix_width and pix_height to real dimensions per pixel 
 
-gd = GenericDialog("Dimension Options")
-gd.addMessage("Conversion from pixles to uM :Evos 10X pixle width/height = 0.8777017 uM")
-gd.addMessage("Conversion from pixles to uM :Evos 4X  pixle width/height = 2.1546047 uM")
-gd.addMessage("Conversion from pixles to uM :Calculate for your objective and enter below")
-gd.addStringField("Pixel Width:", "0.8777017")
-gd.addStringField("Pixel Height:", "0.8777017")
-gd.showDialog()
-
-pix_width = gd.getNextString()
-pix_height = gd.getNextString()
 
 
 # Get input and output directories with GUI 
@@ -113,7 +103,7 @@ for subfolder in subfolders:
 		imp = IJ.openImage(inputDirectory + subfolder + '/' + filename)	
 
 		if imp:
-			IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" +str(pix_width)+ " pixel_height=" +str(pix_height)+" voxel_depth=25400.0508001")			
+			#IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=0.87" "pixel_height=0.87" "voxel_depth=25400.0508001")			
 
 
 			# Splits channels
