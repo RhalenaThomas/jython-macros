@@ -43,12 +43,6 @@ for filename in files:
 
 		info[filename] = [d1, d2, d3, med]
 
-
-del fields[16]
-for j in range(15, len(fields)-1):
-	fields.append(fields[j] + "_per_nuclei")
-
-
 with open(directory + '/' + outputName, 'w') as csvfile:		
 	writer = csv.writer(csvfile)
 	writer.writerow(fields)
@@ -64,20 +58,22 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 
 					if i != 0:
 
-						if row[7] == "False":
+						if row[35] != "":
 
-							del row[7]
+							if row[7] == "False":
 
-							for j in range(6, len(row)-1):
-								if float(row[11]) == 0:
-									row.append("")
-								else:
-									row.append(float(row[j])/float(row[11]))
+								del row[7]
 
-							row.insert(0, info[filename][0])
-							row.insert(1, info[filename][1])
-							row.insert(2, info[filename][2])
-							row.insert(3, info[filename][3])
+								for j in range(6, len(row)-1):
+									if float(row[11]) == 0:
+										row.append("")
+									else:
+										row.append(float(row[j])/float(row[11]))
 
-							writer.writerow(row)
+								row.insert(0, info[filename][0])
+								row.insert(1, info[filename][1])
+								row.insert(2, info[filename][2])
+								row.insert(3, info[filename][3])
+
+								writer.writerow(row)
 
