@@ -6,20 +6,13 @@ directory = tkFileDialog.askdirectory(parent=root,initialdir="/",title='Please s
 outputName = "combined.csv"
 
 
-fields = ["Ch1", "Ch2", "Ch3", "Media", "Growth", "Viability", "Differentiation", "Attachment", "Score"]
+fields = ["Ch1", "Ch2", "Ch3", "Media"]
 
 info = {}
 
 d1,d2,d3 = "   "
 
 med = ""
-
-growths = {"mTeSR1":[1.5, 0, 2.25, 0.75, 0.5, 1.5, 0.5, 2, 1.5, 2, 0.5, 1], "E8":[0.5, 1.75, 1.25, 1.75, 1.75, 2, 2, 1.75, 1.5, 1.75, 1.5, 1.5]}
-viabilities = {"mTeSR1":[1.75, 1.5, 1.5, 1.75, 1.5, 2, 1.25, 1.5, 1.75, 1.75, 1, 1.5], "E8":[1.5, 1.25, 1.75, 1.5, 1.75, 1.5, 1.5, 1.75, 1.5, 1.75, 1.5, 1.5]}
-differentiations = {"mTeSR1":[2.5, 2.5, 2.5, 2, 2, 2.5, 2.25, 2, 1.5, 1.75, 0, 0.5], "E8":[2.5, 2.5, 2.25, 2,2,2.5, 2.25, 2.25, 1.5, 1.75, 1.75, 1.5]}
-attachments = {"mTeSR1":[2.25, 1.75, 2.25, 1.5, 1.5, 2.5, 2.25, 1.75, 1.75, 1.75, 1.75, 1.25, 1.5], "E8":[1.25, 1.25, 1.75, 1, 1, 2, 1.75, 1.25, 1.25, 1.25, 0, 1.25]}
-scores = {"mTeSR1":[6, 3.75, 6.5, 4, 3.5, 6.5, 4.25, 5.25, 4.5, 5.25, 0.75, 2.5],"E8":[3.75, 4.75, 5, 4.25, 4.5, 6, 5.5, 5, 4.25, 4.5, 3, 4]}
-
 
 files = os.listdir(directory)
 
@@ -85,14 +78,6 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 							row.insert(1, info[filename][1])
 							row.insert(2, info[filename][2])
 							row.insert(3, info[filename][3])
-							
-							line = int(row[9])
-
-							row.insert(4, growths[m][line-1])
-							row.insert(5, viabilities[m][line-1])
-							row.insert(6, differentiations[m][line-1])
-							row.insert(7, attachments[m][line-1])
-							row.insert(8, scores[m][line-1])
 
 							writer.writerow(row)
 
