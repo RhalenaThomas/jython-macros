@@ -36,9 +36,12 @@ with open(outputDirectory + "annotations_" + name + ".csv", "w") as log:
 
 #	for subfolder in subfolders:
 	for filename in os.listdir(inputDirectory): 
-		if filename.endswith(".TIF"):
+		if filename.endswith(".tif"):
 			imp = IJ.openImage(inputDirectory + filename)
 			imp.show()
+			WaitForUserDialog("Title", "Look at image").show()
+			print("an images was shown")
+
 			
 			gd = NonBlockingGenericDialog("Channel Options")  
 			gd.addStringField("Enter the frame at which the cells start differentiating: ", "")
