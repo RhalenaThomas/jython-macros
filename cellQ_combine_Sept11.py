@@ -64,12 +64,6 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 
 								del row[7]
 
-								for j in range(6, len(row)-1):
-									if float(row[11]) == 0:
-										row.append("")
-									else:
-										row.append(float(row[j])/float(row[11]))
-
 								row.insert(0, info[filename][0])
 								row.insert(1, info[filename][1])
 								row.insert(2, info[filename][2])
