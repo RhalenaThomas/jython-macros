@@ -57,17 +57,10 @@ with open(directory + '/' + outputName, 'w') as csvfile:
 				for i, row in enumerate(reader):
 
 					if i != 0:
+						row.insert(0, info[filename][0])
+						row.insert(1, info[filename][1])
+						row.insert(2, info[filename][2])
+						row.insert(3, info[filename][3])
 
-						if row[35] != "":
-
-							if row[7] == "False":
-
-								del row[7]
-
-								row.insert(0, info[filename][0])
-								row.insert(1, info[filename][1])
-								row.insert(2, info[filename][2])
-								row.insert(3, info[filename][3])
-
-								writer.writerow(row)
+						writer.writerow(row)
 
