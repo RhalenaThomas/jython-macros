@@ -112,10 +112,15 @@ for subfolder in subfolders:
 
 			# Measures each channel
 
+				#Summary contains the information for a row for the current image
+
 			summary = {}
 			summary['Directory'] = inputDirectory + subfolder
 			summary['Filename'] = filename
 
+
+				#Color keeps the names for each channel
+				
 			color = ["Red", "Green", "Blue"]
 
 			for i, channel in enumerate(channels):
@@ -124,9 +129,14 @@ for subfolder in subfolders:
 				summary[color[i] + "-intensity"] = "NA"
 				summary[color[i] + "-ROI-count"] = "NA"
 				
+					#gets the mean grey intensity of the channel
+				
 				summary[color[i] + "-intensity"] = channel.getStatistics(Measurements.MEAN).mean
 
 				channel.show()
+
+					#Sets the thresholds from the dialog box 
+				
 				IJ.setThreshold(channel, thresholds[color[i]], 255)
 
 				if thresholdMode:
@@ -134,7 +144,13 @@ for subfolder in subfolders:
 					IJ.run("Threshold...")
 					WaitForUserDialog("Title", "Adjust threshold for " + color[i]).show()
 
+
+
+					#Get the threshold you've used
+
 				summary[color[i] + "-threshold-used"] = ImageProcessor.getMinThreshold(channel.getProcessor())
+
+					#Threshold and watershed
 
 				IJ.run(channel, "Convert to Mask", "")
 				IJ.run(channel, "Watershed", "")
@@ -142,13 +158,19 @@ for subfolder in subfolders:
 				table = ResultsTable()
 				roim = RoiManager(True)
 				ParticleAnalyzer.setRoiManager(roim)
+
+					#Analyses particles: finds all the objects that match criteria
+				
 				pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER | ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES, Measurements.AREA, table, minimum_size, maximum_size, 0.1, 1.0)
 				pa.setHideOutputImage(True)
 				pa.analyze(channel)
 				
+				
 				if thresholdMode:
 					channel.show()
 					WaitForUserDialog("Title", "Look at threshold for" + color[i]).show()
+				
+					#adds count to summary 
 				
 				if table.getColumnIndex("Area") != -1:
 					summary[color[i] + "-ROI-count"] = len(table.getColumn(table.getColumnIndex("Area")))
