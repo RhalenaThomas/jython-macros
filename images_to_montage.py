@@ -38,7 +38,12 @@ for row in filenames:
 
 		else:
 			imp = IJ.openImage(empty)
-		imp.show()
+		imp.show()
+		IJ.run(imp, "Blue", "");
+		IJ.run(imp, "RGB Color", "");
+		imp.setTitle("Blue")
+
+
 
 		#d1 image, green color
 	
@@ -48,6 +53,9 @@ for row in filenames:
 		else:
 			imp = IJ.openImage(empty)
 		imp.show()
+		IJ.run(imp, "Green", "");
+		IJ.run(imp, "RGB Color", "");
+		imp.setTitle("Green")
 
 
 		#d2 image, magenta color
@@ -58,9 +66,6 @@ for row in filenames:
 		else:
 			imp = IJ.openImage(empty)
 		imp.show()
-		IJ.run(imp, "Enhance Contrast", "saturated=0.35");
-		imp.setDisplayRange(250, 400);
-		IJ.run(imp, "Apply LUT", "");
 		IJ.run(imp, "Magenta", "");
 		IJ.run(imp, "RGB Color", "");
 		imp.setTitle("Magenta")
@@ -73,12 +78,10 @@ for row in filenames:
 		else:
 			imp = IJ.openImage(empty)
 		imp.show()
-		
-		
-		IJ.run(imp, "Merge Channels...", "c2=Green c3=Blue c6=Magenta c7=Yellow create keep");
-
-		imp = WindowManager.getCurrentImage() 
+		IJ.run(imp, "Yellow", "");
 		IJ.run(imp, "RGB Color", "");
+		imp.setTitle("Yellow")
+		
 		#IJ.openImage(filename.replace("_R_", "_M_")).show()
 		IJ.run(imp, "Images to Stack", "name=Stack title=[] use")
 		imp2 = WindowManager.getCurrentImage() # the Stack
@@ -87,10 +90,6 @@ for row in filenames:
 		IJ.setForegroundColor(255, 255, 255)
 		IJ.run(imp2, "Make Montage...", "co	lumns=5 rows=1 scale=0.5, borderWidth = 2, useForegroundColor = True") 
 		imp3 = WindowManager.getCurrentImage() # the Montage
-
-		IJ.run(imp3, "Enhance Contrast", "saturated=0.35");
-		IJ.run(imp, "Apply LUT", "");
-
 		IJ.run(imp2, "Save", "save=" + outputDirectory + '/' + time + '_' + row['Row'] + row['Column'] + '_' + row['Condition'] + "stack.tif")
 		IJ.run(imp3, "Save", "save=" + outputDirectory + '/' + time + '_' + row['Row'] + row['Column'] + '_' + row['Condition'] + "montage.tif")
 #			except:
