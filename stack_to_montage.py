@@ -1,3 +1,6 @@
+# this is the macro to quickly go through image stacks and choose which ones to make into a montage
+# the input is sets of stacks and montages that match all in one folder
+
 import os, csv
 from ij import IJ, ImagePlus, ImageStack, WindowManager
 from ij.io import DirectoryChooser  
@@ -13,6 +16,8 @@ inputDirectory = dc.getDirectory()
 
 dc = DirectoryChooser("Select an output directory")
 outputDirectory = dc.getDirectory()
+
+filename = []
 
 
 for image in os.listdir(inputDirectory):
