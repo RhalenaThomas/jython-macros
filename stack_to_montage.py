@@ -18,17 +18,14 @@ inputDirectory = dc.getDirectory()
 dc = DirectoryChooser("Select an output directory")
 outputDirectory = dc.getDirectory()
 
-filename = []
-
 
 for image in os.listdir(inputDirectory):
 	print(image)
 	if "stack" in image:
 		imp = IJ.openImage(inputDirectory + "/" + image)
 		imp2 = IJ.openImage(inputDirectory + "/" + image.replace("stack", "montage"))
-
-
-
+		imp2.show()
+		imp.show()
 		
 		gd = GenericDialog("?")
 		gd.addChoice("Would you like to adjust this one?", ["No", "Yes"], "No")
@@ -43,15 +40,13 @@ for image in os.listdir(inputDirectory):
 			IJ.run(imp, "Images to Stack", "name=Stack title=[] use")
 			imp = WindowManager.getCurrentImage() # the Stack
 
+		imp.show()
 		IJ.setForegroundColor(255, 255, 255)
-		IJ.run(imp2, "Make Montage...", "columns=5 rows=1 scale=0.5, borderWidth = 2, useForegroundColor = True")
-
-		imp3 = WindowManager.getCurrentImage() # the Montage
-
+		IJ.run(imp, "Make Montage...", "columns=5 rows=1 scale=0.5 borderWidth = 2 useForegroundColor = True")
 		
-		IJ.run(imp3, "Save", "save=" + outputDirectory + '/' + time + '_' + row['Row'] + row['Column'] + '_' + row['Condition'] + "montage.tif")
+		IJ.run("Save", "save=" + outputDirectory + '/' + image.replace("stack", "newmontage"))
 
-		IJ.run(imp, "Close All", "")
+		IJ.run("Close All", "")
 
 print("Done!")
 
