@@ -36,8 +36,8 @@ for image in os.listdir(inputDirectory):
 			IJ.run("Brightness/Contrast...");
 			WaitForUserDialog("Title", "Adjust intensities").show()
 			IJ.run("Stack to Images", "");
-			Magenta.show()
-			Magenta.close();
+			mag = WindowManager.getImage("Magenta")
+			mag.close()
 			IJ.run(imp, "Merge Channels...", "c2=Green c3=Blue c7=Yellow create keep");
 			imp = WindowManager.getCurrentImage() 
 			IJ.run(imp, "RGB Color", "");
@@ -47,7 +47,7 @@ for image in os.listdir(inputDirectory):
 
 			imp.show()
 			IJ.setForegroundColor(255, 255, 255)
-			IJ.run(imp, "Make Montage...", "columns=5 rows=1 scale=0.5 borderWidth = 2 useForegroundColor = True")
+			IJ.run(imp, "Make Montage...", "columns=4 rows=1 scale=0.5 borderWidth = 2 useForegroundColor = True")
 			#WaitForUserDialog("Title", "Now we should have the montage").show()
 			IJ.run("Save", "save=" + outputDirectory + '/' + image.replace("stack", "newmontage"))
 
