@@ -44,6 +44,17 @@ gd.showDialog()
 if gd.getNextChoice() == "Yes, enable watershed":
 	watershedMode = True
 
+#Set invert
+	
+inverted = False
+
+gd = GenericDialog("Set Invert Mode")
+gd.addChoice("", ["Dark organoid on light background", "Light organoid on dark background"], "Dark organoid on light background")
+gd.showDialog()
+if gd.getNextChoice() == "Light organoid on dark background":
+	inverted = True
+
+
 
 
 # Set default thresholds:
@@ -51,29 +62,49 @@ if gd.getNextChoice() == "Yes, enable watershed":
 #	area_threshold is the minimum area a roi must have to be considered an organoid for the isorganoid column
 #	minimum_size is the minimum area to be considered an ROI
 
-gd = GenericDialog("Other Thresholds.")
-gd.addMessage("Ajust after you have determined if new thresholds are needed.")
-gd.addStringField("Round threshold", "0.62")
-gd.addStringField("Area Threshold", "50000")
-gd.addStringField("Minimum Size", "3000")
-gd.showDialog()
+#gd = GenericDialog("Other Thresholds.")
+#gd.addMessage("Ajust after you have determined if new thresholds are needed.")
+#gd.addStringField("Round threshold", "0.62")
+#gd.addStringField("Area Threshold", "50000")
+#gd.addStringField("Minimum Size", "3000")
+#gd.showDialog()
 
-round_threshold = float(gd.getNextString())
-area_threshold = float(gd.getNextString())
-minimum_size = float(gd.getNextString())
+#round_threshold = float(gd.getNextString())
+#area_threshold = float(gd.getNextString())
+#minimum_size = float(gd.getNextString())
+
+round_threshold = 0.62
+area_threshold = 50000
+minimum_size = 3000
+
 
 #set pix_width and pix_height to real dimensions per pixel 
 
 gd = GenericDialog("Dimension Options")
-gd.addMessage("Conversion from pixles to uM :Evos 10X pixle width/height = 0.8777017 uM")
-gd.addMessage("Conversion from pixles to uM :Evos 4X  pixle width/height = 2.1546047 uM")
-gd.addMessage("Conversion from pixles to uM :Calculate for your objective and enter below")
-gd.addStringField("Pixel Width:", "0.8777017")
-gd.addStringField("Pixel Height:", "0.8777017")
+gd.addMessage("Evos 10X  = 0.8777017 px/uM")
+gd.addMessage("Evos 4X  = 2.1546047 px/uM")
+gd.addChoice("Choose the pixel scale of your image:", ["10X Evos", "4X Evos", "Other"], "10X Evos")
 gd.showDialog()
 
-pix_width = gd.getNextString()
-pix_height = gd.getNextString()
+choice = gd.getNextChoice()
+
+if choice == "10X Evos":
+	pix_width = 0.8777017
+	pix_height = 0.8777017
+if choice == "4X Evos":
+	pix_width = 2.1546047
+	pix_height = 2.1546047
+
+if choice == "Other":
+	gd = GenericDialog("Dimension Options")
+
+	gd.addMessage("Conversion from pixels to uM :Calculate for your objective and enter below")
+	gd.addStringField("Pixel Width:", "0.8777017")
+	gd.addStringField("Pixel Height:", "0.8777017")
+	gd.showDialog()
+
+	pix_width = gd.getNextString()
+	pix_height = gd.getNextString()
 
 
 
@@ -125,7 +156,10 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 					IJ.run("Threshold...")
 					WaitForUserDialog("Title", "Adjust threshold").show()
 				IJ.run(imp, "Convert to Mask", "")
-				IJ.run(imp, "Invert", "")
+				
+				if not inverted:
+					IJ.run(imp, "Invert", "")
+				
 				IJ.run(imp, "Fill Holes", "")
 				
 				if watershedMode:
