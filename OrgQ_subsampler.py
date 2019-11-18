@@ -116,8 +116,8 @@ def process(subFolder, outputDirectory, filename):
 	imp.close()
 	
 
-	x_amount = 10
-	y_amount = 10
+	x_amount = 20
+	y_amount = 20
 
 
 	l = 0

@@ -33,7 +33,7 @@ dc = DirectoryChooser("Select an output directory")
 outputDirectory = dc.getDirectory()
 
 for row in filenames:
-	for time in ["NPC", "2w", "4w"]:
+	for time in ["4w"]:
 	
 		filename = inputDirectory + time + '/' + row[time]
 		print(filename)
