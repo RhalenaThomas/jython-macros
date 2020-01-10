@@ -1,14 +1,19 @@
-'''
-		OrgQ		- ImageJ Macro written in  Python 
+#
+#		OrgQ		- ImageJ Macro written in  Python 
+#		
+#		Input 		- Folders containing split channel images for Organoids
+#					- The filenames of the images must end in ch00, ch01, ch02, ch03
+#					- Optional thresholding can be loaded as well
 		
-		Input 		- Folders containing split channel images for Organoids
-					- The filenames of the images must end in ch00, ch01, ch02, ch03
-					- Optional thresholding can be loaded as well
-		
-		Output		- CSV file containing nuclei counts and marker colocalization data for each image 
+#		Output		- CSV file containing nuclei counts and marker colocalization data for each image
+#					- Intensity per area
+#					- Count number of pixels for each marker 
 
-		Written by: 						Eddie Cai & Rhalena A. Thomas & Vince Soubanier & Valerio
-'''
+#		Written by: 						Eddie Cai & Rhalena A. Thomas 
+#		Incorporating analysis ideas from Vincent Soubanier and Valoria
+
+		
+
 
 
 import os, sys, math, csv, datetime
