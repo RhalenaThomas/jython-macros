@@ -119,9 +119,7 @@ def process(subFolder, outputDirectory, filename):
     ic.convertToGray8();
     IJ.setThreshold(imp, 2, 255)
 
-    # ask user for adjusting
-
-    #Call threshold function to adjust threshold
+    #Call threshold function to adjust threshold and select Organoid ROI
     IJ.run("Threshold...")
     WaitForUserDialog("Adjust Threshold").show()
     IJ.setTool("Wand")
@@ -137,12 +135,15 @@ def process(subFolder, outputDirectory, filename):
     rm = RoiManager(True)
     #imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
 
-    #FileSaver(temp1, inputDirectory + subFolder + '/temp1')
+    #Save the mask and open it
     IJ.saveAs("tiff", inputDirectory + '/mask')
     mask = IJ.openImage(inputDirectory + '/mask.tif')
-    print(mask)
-    imp.close()
 
+    #Select ROI again to add it to the the ROI manager
+    IJ.setTool("Wand")
+    WaitForUserDialog("Select Orgnoid area again").show()
+    boundroi = ThresholdToSelection.run(mask)
+    rm.addRoi(boundroi)
 
     if not displayImages:
         imp.changes = False
@@ -154,28 +155,26 @@ def process(subFolder, outputDirectory, filename):
     blobsnuclei = [None] * 5
     bigAreas = [None] * 5
 
+    #Loop to open all the channel images
     for chan in channels:
         v, x = chan
         images[x] = IJ.openImage(
             inputDirectory + subFolder + '/' + rreplace(filename, "_ch00.tif", "_ch0" + str(x) + ".tif"))
 
 
-        # Apply Mask to ch00 image
+        # Apply Mask on all the images and save them into an array
         apply_mask = ImageCalculator()
         images[x] = apply_mask.run("Multiply create 32 bit", mask, images[x])
         ic = ImageConverter(images[x]);
         ic.convertToGray8();
         imp = images[x]
 
-        print(rm.getRoisAsArray())
-
+        # Calculate the intensities for each channel as well as the organoid area
         for roi in rm.getRoisAsArray():
             imp.setRoi(roi)
             stats = imp.getStatistics(Measurements.MEAN | Measurements.AREA)
             intensities[x] = stats.mean
-            print(intensities[x])
             bigAreas[x] = stats.area
-            print(bigAreas[x])
 
     rm.close()
 
