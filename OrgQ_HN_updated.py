@@ -2,8 +2,8 @@
 #		OrgQ		- ImageJ Macro written in  Python
 #
 #		Input 		- Folders containing split channel images for Organoids
-#					- The filenames of the images must end in ch00, ch01, ch02, ch03
-#                   - Folder must also contained the merged image file ending with merged.tif
+#					- The filenames of the images must end in ch00, ch01, ch02, ch03 and have merged in the names ex. "Merged_ch00"
+#                   - Folder must also contained the merged image file ending with Merged.tif
 #					- Optional thresholding can be loaded as well
 
 #		Output		- CSV file containing nuclei counts and marker colocalization data for each image
@@ -108,6 +108,7 @@ def rreplace(s, old, new):
 ############# Main loop, will run for every image. ##############
 
 def process(subFolder, outputDirectory, filename):
+    #IJ.close()
     imp = IJ.openImage(inputDirectory + subFolder + '/' + rreplace(filename, "_ch00.tif", ".tif"))
 
     imp.show()
@@ -121,9 +122,9 @@ def process(subFolder, outputDirectory, filename):
 
     #Call threshold function to adjust threshold and select Organoid ROI
     IJ.run("Threshold...")
-    WaitForUserDialog("Adjust Threshold").show()
+    WaitForUserDialog("Adjust Threshold to create mask").show()
     IJ.setTool("Wand")
-    WaitForUserDialog("Click on Organoid Area for it to be selected").show()
+    WaitForUserDialog("Click on Organoid Area for it to be selected. Best selection will be at the edge of the organoid to get entire organoid shape.").show()
     IJ.run("Clear Outside")
 
 
@@ -133,17 +134,19 @@ def process(subFolder, outputDirectory, filename):
 
     #imp.getProcessor().invert()
     rm = RoiManager(True)
-    #imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
+    imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
 
     #Save the mask and open it
     IJ.saveAs("tiff", inputDirectory + '/mask')
     mask = IJ.openImage(inputDirectory + '/mask.tif')
 
     #Select ROI again to add it to the the ROI manager
-    IJ.setTool("Wand")
-    WaitForUserDialog("Select Orgnoid area again").show()
-    boundroi = ThresholdToSelection.run(mask)
-    rm.addRoi(boundroi)
+    #IJ.run("Threshold...")
+    # IJ.setTool("Wand")
+    # WaitForUserDialog("Select Organoid area again for it to register within the ROI manager").show()
+    # boundroi = ThresholdToSelection.run(mask)
+    # rm.addRoi(boundroi)
+    #rm.addRoi()
 
     if not displayImages:
         imp.changes = False
@@ -154,6 +157,8 @@ def process(subFolder, outputDirectory, filename):
     blobsarea = [None] * 5
     blobsnuclei = [None] * 5
     bigAreas = [None] * 5
+
+    imp.close()
 
     #Loop to open all the channel images
     for chan in channels:
@@ -277,12 +282,13 @@ def process(subFolder, outputDirectory, filename):
         blobsnuclei[x] = len(blobs)
 
 
-
         if not displayImages:
             imp.changes = False
             imp.close()
         roim.reset()
         roim.close()
+
+        imp.close()
 
     # Creates the summary dictionary which will correspond to a single row in the output csv, with each key being a column
 
