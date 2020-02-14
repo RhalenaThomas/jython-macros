@@ -136,16 +136,15 @@ def process(subFolder, outputDirectory, filename):
     rm = RoiManager(True)
     imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
 
-    #Save the mask and open it
-    IJ.saveAs("tiff", inputDirectory + '/mask')
+    #Save the mask and open it   IJ.saveAs("tiff", inputDirectory + '/mask')
     mask = IJ.openImage(inputDirectory + '/mask.tif')
 
-    #Select ROI again to add it to the the ROI manager
+    #Select ROI again to add it to the the ROI manager so that intensities and area is saved
     #IJ.run("Threshold...")
-    # IJ.setTool("Wand")
-    # WaitForUserDialog("Select Organoid area again for it to register within the ROI manager").show()
-    # boundroi = ThresholdToSelection.run(mask)
-    # rm.addRoi(boundroi)
+    IJ.setTool("Wand")
+    WaitForUserDialog("Select Organoid area again for it to register within the ROI manager").show()
+    boundroi = ThresholdToSelection.run(mask)
+    rm.addRoi(boundroi)
     #rm.addRoi()
 
     if not displayImages:
