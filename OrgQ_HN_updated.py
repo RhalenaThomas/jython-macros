@@ -29,13 +29,7 @@ from ij.gui import WaitForUserDialog
 from ij.plugin.filter import ThresholdToSelection
 from ij.plugin import ImageCalculator
 from ij.WindowManager import getCurrentImage
-from ij.io import FileSaver
-from ij.gui import Roi
-from ij.gui import Overlay
-from ij.gui import Wand
-from ij.plugin.filter.Filler import clearOutside
-from ij.WindowManager import getImage
-from ij.WindowManager import setTempCurrentImage
+
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
 displayImages = True
@@ -110,42 +104,33 @@ def rreplace(s, old, new):
 def process(subFolder, outputDirectory, filename):
     #IJ.close()
     imp = IJ.openImage(inputDirectory + subFolder + '/' + rreplace(filename, "_ch00.tif", ".tif"))
-
     imp.show()
-
 
     IJ.run(imp, "Properties...",
            "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
     ic = ImageConverter(imp);
     ic.convertToGray8();
-    IJ.setThreshold(imp, 2, 255)
+    #IJ.setThreshold(imp, 2, 255)
 
-    #Call threshold function to adjust threshold and select Organoid ROI
-    IJ.run("Threshold...")
-    WaitForUserDialog("Adjust Threshold to create mask").show()
-    IJ.setTool("Wand")
-    WaitForUserDialog("Click on Organoid Area for it to be selected. Best selection will be at the edge of the organoid to get entire organoid shape.").show()
-    IJ.run("Clear Outside")
-
+    #Automatically selects the area of the organoid based on automated thresholding and creates a mask to be applied on
+    #all other images
+    IJ.setAutoThreshold(imp, "Intermodes dark no-reset")
+    IJ.run(imp, "Convert to Mask", "")
+    IJ.run(imp, "Analyze Particles...", "size=100000-Infinity add select")
+    rm = RoiManager.getInstance()
+    imp = getCurrentImage()
+    rm.select(imp, 0)
+    IJ.setBackgroundColor(0, 0, 0)
+    IJ.run(imp, "Clear Outside", "")
 
     IJ.run(imp, "Convert to Mask", "")
     IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Dark")
     IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Bright")
 
-    #imp.getProcessor().invert()
-    rm = RoiManager(True)
-    imp.getProcessor().setThreshold(0, 0, ImageProcessor.NO_LUT_UPDATE)
-
-    #Save the mask and open it   IJ.saveAs("tiff", inputDirectory + '/mask')
+    # #Save the mask and open it
+    IJ.saveAs("tiff", inputDirectory + '/mask')
     mask = IJ.openImage(inputDirectory + '/mask.tif')
 
-    #Select ROI again to add it to the the ROI manager so that intensities and area is saved
-    #IJ.run("Threshold...")
-    IJ.setTool("Wand")
-    WaitForUserDialog("Select Organoid area again for it to register within the ROI manager").show()
-    boundroi = ThresholdToSelection.run(mask)
-    rm.addRoi(boundroi)
-    #rm.addRoi()
 
     if not displayImages:
         imp.changes = False
@@ -169,8 +154,8 @@ def process(subFolder, outputDirectory, filename):
         # Apply Mask on all the images and save them into an array
         apply_mask = ImageCalculator()
         images[x] = apply_mask.run("Multiply create 32 bit", mask, images[x])
-        ic = ImageConverter(images[x]);
-        ic.convertToGray8();
+        ic = ImageConverter(images[x])
+        ic.convertToGray8()
         imp = images[x]
 
         # Calculate the intensities for each channel as well as the organoid area
@@ -277,7 +262,7 @@ def process(subFolder, outputDirectory, filename):
             stats = imp.getStatistics(Measurements.AREA)
             blobs.append(stats.area)
 
-        blobsarea[x] = sum(blobs)
+        blobsarea[x] = sum(blobs) #take this out and use intial mask tissue area from the beginning
         blobsnuclei[x] = len(blobs)
 
 
@@ -404,6 +389,7 @@ def process(subFolder, outputDirectory, filename):
             writer.writeheader()
         writer.writerow(summary)
 
+    IJ.run(imp, "Close All", "")
 
 ########################## code begins running here ##############################
 
