@@ -114,7 +114,7 @@ def process(subFolder, outputDirectory, filename):
 
     #Automatically selects the area of the organoid based on automated thresholding and creates a mask to be applied on
     #all other images
-    IJ.setAutoThreshold(imp, "Intermodes dark no-reset")
+    IJ.setAutoThreshold(imp, "Mean dark no-reset")
     IJ.run(imp, "Convert to Mask", "")
     IJ.run(imp, "Analyze Particles...", "size=100000-Infinity add select")
     rm = RoiManager.getInstance()
