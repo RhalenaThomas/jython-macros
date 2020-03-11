@@ -123,8 +123,25 @@ def process(subFolder, outputDirectory, filename):
     imp = IJ.openImage(inputDirectory + subFolder + '/' + rreplace(filename, "_ch00.tif", ".tif"))
     imp.show()
 
+    # Get the pixel values from the xml file
+    for file in os.listdir(inputDirectory + subFolder):
+        if file.endswith('.xml'):
+            xml = os.path.join(inputDirectory + subFolder, file)
+            xml = "C:/Users/Harris/Desktop/test_xml_for_parsing_pixel.xml"
+            element_tree = ET.parse(xml)
+            root = element_tree.getroot()
+            for dimensions in root.iter('DimensionDescription'):
+                num_pixels = int(dimensions.attrib['NumberOfElements'])
+                if dimensions.attrib['Unit'] == "m":
+                    length = float(dimensions.attrib['Length']) * 1000000
+                else:
+                    length = float(dimensions.attrib['Length'])
+            pixel_length = length / num_pixels
+        else:
+            pixel_length = 0.8777017
+
     IJ.run(imp, "Properties...",
-           "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
+           "channels=1 slices=1 frames=1 unit=um pixel_width=" + str(pixel_length) + " pixel_height=" + str(pixel_length) + " voxel_depth=25400.0508001")
     ic = ImageConverter(imp);
     ic.convertToGray8();
     #IJ.setThreshold(imp, 2, 255)
