@@ -10,8 +10,8 @@
 #					- Intensity per area
 #					- Count number of pixels for each marker
 
-#		Written by: 						Eddie Cai & Rhalena A. Thomas
-#		Incorporating analysis ideas from Vincent Soubanier and Valoria
+#		Written by: 						Eddie Cai, Rhalena A. Thomas & Harris Nami
+#		Incorporating analysis ideas from Vincent Soubanier and Valerio Piscopo
 
 
 import os, sys, math, csv, datetime
@@ -29,6 +29,7 @@ from ij.gui import WaitForUserDialog
 from ij.plugin.filter import ThresholdToSelection
 from ij.plugin import ImageCalculator
 from ij.WindowManager import getCurrentImage
+import xml.etree.ElementTree as ET
 
 
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
@@ -48,7 +49,7 @@ def getChannels(subFolder):
     gd.addStringField("Channel ch02:", "MAP2")
     gd.addStringField("Channel ch03:", "SYN")
     gd.addMessage("")
-    gd.addStringField("What would you like the output file to be named:", "output")
+    gd.addStringField("What would you like the output file to be named:", subFolder)
 
     gd.showDialog()
 
@@ -110,7 +111,6 @@ def process(subFolder, outputDirectory, filename):
     for file in os.listdir(inputDirectory + subFolder):
         if file.endswith('.xml'):
             xml = os.path.join(inputDirectory + subFolder, file)
-            xml = "C:/Users/Harris/Desktop/test_xml_for_parsing_pixel.xml"
             element_tree = ET.parse(xml)
             root = element_tree.getroot()
             for dimensions in root.iter('DimensionDescription'):
