@@ -35,6 +35,8 @@ import xml.etree.ElementTree as ET
 # To enable displayImages mode (such as for testing thresholds), make displayImages = True
 displayImages = True
 
+#Enable using the wand tool to manually select the organoid ROI in cases where auto-threshold does not work
+enableWand = True
 
 # Function to get the markers needed with a generic dialog for each subfolder, as well as the name of the output for that subfolder
 def getChannels(subFolder):
@@ -107,8 +109,9 @@ def process(subFolder, outputDirectory, filename):
     imp = IJ.openImage(inputDirectory + subFolder + '/' + rreplace(filename, "_ch00.tif", ".tif"))
     imp.show()
 
-    file_list = [file for file in os.listdir(inputDirectory + subFolder) if file.endswith('.xml')]
 
+    # Finds the pixel length in microns from the xml metadata file
+    file_list = [file for file in os.listdir(inputDirectory + subFolder) if file.endswith('.xml')]
     if len(file_list) > 0:
         xml = os.path.join(inputDirectory + subFolder, file_list[0])
         element_tree = ET.parse(xml)
@@ -123,7 +126,7 @@ def process(subFolder, outputDirectory, filename):
     else:
         pixel_length = 0.877017
 
-    log.write("Pixel Length_HN:" + str(pixel_length) + "\n")
+    log.write("Pixel Length:" + str(pixel_length) + "\n")
 
     IJ.run(imp, "Properties...",
            "channels=1 slices=1 frames=1 unit=um pixel_width=" + str(pixel_length) + " pixel_height=" + str(pixel_length) + " voxel_depth=25400.0508001")
@@ -131,16 +134,25 @@ def process(subFolder, outputDirectory, filename):
     ic.convertToGray8();
     #IJ.setThreshold(imp, 2, 255)
 
-    #Automatically selects the area of the organoid based on automated thresholding and creates a mask to be applied on
-    #all other images
-    IJ.setAutoThreshold(imp, "Mean dark no-reset")
-    IJ.run(imp, "Convert to Mask", "")
-    IJ.run(imp, "Analyze Particles...", "size=100000-Infinity add select")
-    rm = RoiManager.getInstance()
-    imp = getCurrentImage()
-    rm.select(imp, 0)
-    IJ.setBackgroundColor(0, 0, 0)
-    IJ.run(imp, "Clear Outside", "")
+
+    # If wand tool is enabled, then this will prompt that to be used
+    if enableWand:
+        # Call threshold function to adjust threshold and select Organoid ROI
+        IJ.run("Threshold...")
+        WaitForUserDialog("Adjust Threshold to create mask").show()
+        IJ.setTool("Wand")
+        WaitForUserDialog("Click on Organoid Area for it to be selected. Best selection will be at the edge of the organoid to get entire organoid shape.").show()
+        IJ.run("Clear Outside")
+
+    if not enableWand:
+        IJ.setAutoThreshold(imp, "Mean dark no-reset")
+        IJ.run(imp, "Convert to Mask", "")
+        IJ.run(imp, "Analyze Particles...", "size=100000-Infinity add select")
+        rm = RoiManager.getInstance()
+        imp = getCurrentImage()
+        rm.select(imp, 0)
+        IJ.setBackgroundColor(0, 0, 0)
+        IJ.run(imp, "Clear Outside", "")
 
     IJ.run(imp, "Convert to Mask", "")
     IJ.run(imp, "Remove Outliers...", "radius=5" + " threshold=50" + " which=Dark")
@@ -149,6 +161,15 @@ def process(subFolder, outputDirectory, filename):
     # #Save the mask and open it
     IJ.saveAs("tiff", inputDirectory + '/mask')
     mask = IJ.openImage(inputDirectory + '/mask.tif')
+
+    if enableWand:
+        #Select ROI again to add it to the the ROI manager so that intensities and area is saved
+        #IJ.run("Threshold...")
+        IJ.setTool("Wand")
+        WaitForUserDialog("Select Organoid area again for it to register within the ROI manager").show()
+        rm = RoiManager()
+        boundroi = ThresholdToSelection.run(mask)
+        rm.addRoi(boundroi)
 
 
     if not displayImages:
@@ -187,7 +208,7 @@ def process(subFolder, outputDirectory, filename):
     rm.close()
 
     # Opens the ch00 image and sets default properties
-
+    apply_mask = ImageCalculator()
     imp = IJ.openImage(inputDirectory + subFolder + '/' + filename)
     imp = apply_mask.run("Multiply create 32 bit", mask, imp)
     IJ.run(imp, "Properties...",
@@ -237,8 +258,9 @@ def process(subFolder, outputDirectory, filename):
         # Opens each image and thresholds
 
         imp = images[x]
+
         IJ.run(imp, "Properties...",
-               "channels=1 slices=1 frames=1 unit=um pixel_width=0.8777017 pixel_height=0.8777017 voxel_depth=25400.0508001")
+               "channels=1 slices=1 frames=1 unit=um pixel_width=" + str(pixel_length) + " pixel_height=" + str(pixel_length) + " voxel_depth=25400.0508001")
 
         ic = ImageConverter(imp);
         ic.convertToGray8();
