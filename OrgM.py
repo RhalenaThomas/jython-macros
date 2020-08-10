@@ -83,7 +83,7 @@ minimum_size = 3000
 gd = GenericDialog("Dimension Options")
 gd.addMessage("Evos 10X  = 0.8777017 px/uM")
 gd.addMessage("Evos 4X  = 2.1546047 px/uM")
-gd.addChoice("Choose the pixel scale of your image:", ["10X Evos", "4X Evos", "Other"], "10X Evos")
+gd.addChoice("Choose the pixel scale of your image:", ["10X Evos", "4X Evos", "Keep image metadata", "Other"], "10X Evos")
 gd.showDialog()
 
 choice = gd.getNextChoice()
@@ -143,7 +143,10 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 
 			if imp:
 				# 10X objective
-				IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" +str(pix_width)+ " pixel_height=" +str(pix_height)+" voxel_depth=25400.0508001")			# Change to a GUI option later?
+				if choice == "Keep image metadata":
+					IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um voxel_depth=25400.0508001")			# Change to a GUI option later?
+				else:
+					IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" +str(pix_width)+ " pixel_height=" +str(pix_height)+" voxel_depth=25400.0508001")			# Change to a GUI option later?
 
 				# Threshold, fills hole and watershed
 
@@ -172,7 +175,7 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				table = ResultsTable()
 				roim = RoiManager(True)
 				ParticleAnalyzer.setRoiManager(roim); 
-				pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER | ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES, Measurements.AREA | Measurements.FERET | Measurements.CIRCULARITY | Measurements.SHAPE_DESCRIPTORS | Measurements.CENTROID | Measurements.ELLIPSE, table, minimum_size, 9999999999999999, 0.2, 1.0)
+				pa = ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER | ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES, Measurements.AREA | Measurements.FERET | Measurements.CIRCULARITY | Measurements.SHAPE_DESCRIPTORS | Measurements.CENTROID | Measurements.ELLIPSE, table, minimum_size*pix_width, 9999999999999999, 0.2, 1.0)
 				pa.setHideOutputImage(True)
 				pa.analyze(imp)
 
@@ -200,7 +203,7 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				if index != -1:
 
 					diameter = 2* math.sqrt( float(table.getValue("Area", index)) / (2* math.pi)) 
-					isOrganoid = table.getValue("Area", index) > area_threshold and table.getValue("Area", index) > round_threshold
+					isOrganoid = table.getValue("Area", index) > area_threshold * pix_width and table.getValue("Area", index) > round_threshold
 					output.write(str(subfolder) + ',' + filename + ',' + str(table.getValue("Feret", index)) + ',' + str(table.getValue("MinFeret", index)) + ',' + str((table.getValue("MinFeret", index)+table.getValue("Feret", index))/2) + ','  + str(table.getValue("Area", index)) + ',' + str(diameter) + ',' + str(table.getValue("Major", index)) + ','+ str(table.getValue("Minor", index)) + ','+ str(table.getValue("Circ.", index)) + ',' +str(table.getValue("Round", index)) + ',' + str(table.getValue("Solidity", index)) + ','  + str(isOrganoid))
 				else:
 					output.write(str(subfolder) + ',' + filename + ",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA")
