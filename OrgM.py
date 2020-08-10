@@ -88,6 +88,9 @@ gd.showDialog()
 
 choice = gd.getNextChoice()
 
+pix_width = 0
+pix_height = 0
+
 if choice == "10X Evos":
 	pix_width = 0.8777017
 	pix_height = 0.8777017
@@ -145,8 +148,12 @@ with open(outputDirectory + "output_"+datetime.datetime.now().strftime("%Y-%m-%d
 				# 10X objective
 				if choice == "Keep image metadata":
 					IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um voxel_depth=25400.0508001")			# Change to a GUI option later?
+					pix_width = imp.getCalibration().pixelWidth
+					pix_height = imp.getCalibration().pixelHeight
 				else:
 					IJ.run(imp, "Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" +str(pix_width)+ " pixel_height=" +str(pix_height)+" voxel_depth=25400.0508001")			# Change to a GUI option later?
+
+
 
 				# Threshold, fills hole and watershed
 
