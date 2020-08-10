@@ -63,7 +63,7 @@ with open(outputDirectory + "measurements.csv", "w") as log:
 
    			measure = 1/(sum(table.getColumn(table.getColumnIndex("Length")))/len(table.getColumn(table.getColumnIndex("Length"))))
 
-			log.write(name +','+ str(measure))
+			log.write(name +','+ str(measure)+'\n')
 
 			IJ.selectWindow("Results")
 			IJ.run("Close")
